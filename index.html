@@ -35,34 +35,41 @@
       opacity: 0; font-weight: 300; font-style: italic; 
     }
 
+    /* Kotak Interaksi (Bisa di-scroll kalau layar HP kecil) */
     .glass-card { 
       background: rgba(20, 0, 10, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
-      border: 1px solid rgba(255, 42, 109, 0.3); padding: 40px; border-radius: 20px; 
+      border: 1px solid rgba(255, 42, 109, 0.3); padding: 30px; border-radius: 20px; 
       box-shadow: 0 0 40px rgba(255, 42, 109, 0.2); pointer-events: auto; 
-      display: none; opacity: 0; transform: translateY(20px); max-width: 90%; width: 400px; 
+      display: none; opacity: 0; transform: translateY(20px); max-width: 90%; width: 400px;
+      max-height: 85vh; overflow-y: auto; 
     }
+    .glass-card::-webkit-scrollbar { display: none; } /* Sembunyikan scrollbar agar estetik */
     
     .btn { 
-      padding: 12px 30px; margin: 10px; font-size: 1.1rem; font-weight: bold; 
-      border: none; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; 
+      padding: 12px 20px; margin: 5px; font-size: 1rem; font-weight: bold; 
+      border: none; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; width: 100%; box-sizing: border-box;
     }
-    #btn-yes { background: linear-gradient(45deg, #ff2a6d, #ff7b9c); color: white; box-shadow: 0 0 20px rgba(255,42,109,0.5); }
+    #btn-yes { background: linear-gradient(45deg, #ff2a6d, #ff7b9c); color: white; box-shadow: 0 0 20px rgba(255,42,109,0.5); width: auto; padding: 12px 30px; margin: 10px;}
     #btn-yes:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(255,42,109,0.8); }
-    #btn-no { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); position: relative; }
+    #btn-no { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); position: relative; width: auto; padding: 12px 30px; margin: 10px;}
     
     textarea { 
       width: 100%; padding: 15px; border-radius: 12px; border: 1px solid rgba(255,42,109,0.4); 
       background: rgba(0,0,0,0.6); color: white; font-family: inherit; resize: none; 
-      box-sizing: border-box; margin-top: 15px; margin-bottom: 10px; font-size: 1rem; 
+      box-sizing: border-box; margin-top: 10px; margin-bottom: 5px; font-size: 1rem; 
     }
     textarea:focus { outline: none; border-color: #ff2a6d; box-shadow: 0 0 15px rgba(255,42,109,0.3); }
     
-    #btn-send { background: linear-gradient(45deg, #00e676, #00b35c); color: white; width: 100%; box-shadow: 0 0 20px rgba(0,230,118,0.4); }
-    #btn-record { background: linear-gradient(45deg, #ff9a44, #fc6076); color: white; width: 100%; margin-top: 10px; box-shadow: 0 0 20px rgba(252,96,118,0.4); }
+    #btn-send { background: linear-gradient(45deg, #00e676, #00b35c); color: white; box-shadow: 0 0 20px rgba(0,230,118,0.4); }
+    #btn-record { background: linear-gradient(45deg, #ff9a44, #fc6076); color: white; box-shadow: 0 0 20px rgba(252,96,118,0.4); }
     
-    /* Animasi Kedip untuk Tombol Rekam */
     .recording { animation: blink 1s infinite; background: #ff0000 !important; box-shadow: 0 0 30px red !important; }
     
+    /* Area Kanvas Doodle */
+    .doodle-area { margin-top: 15px; text-align: left; }
+    canvas { border: 2px dashed #ff2a6d; border-radius: 12px; background: rgba(0,0,0,0.5); width: 100%; height: 150px; touch-action: none; cursor: crosshair; }
+    .canvas-btns { display: flex; gap: 10px; margin-top: 5px; }
+
     @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.5; transform: scale(0.95); } }
     @keyframes blink { 50% { opacity: 0.5; } }
   </style>
@@ -98,16 +105,29 @@
     <div id="question-box" class="glass-card">
       <h2 style="margin-top:0; color: #ff8eac;">Hai, Kacung...</h2>
       <p style="font-size: 1.2rem; margin-bottom: 30px;">Setelah semua ini, kamu masih sayang banget kan sama aku?</p>
-      <button id="btn-yes" class="btn">Pasti dong! ❤️</button>
-      <button id="btn-no" class="btn">Enggak 👎</button>
+      <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
+        <button id="btn-yes" class="btn">Pasti dong! ❤️</button>
+        <button id="btn-no" class="btn">Enggak 👎</button>
+      </div>
     </div>
 
     <div id="reply-box" class="glass-card">
       <h2 style="margin-top:0; color: #00e676;">Aku juga sayang kamu! 💕</h2>
-      <p style="font-size: 1rem; opacity: 0.8; margin-bottom: 10px;">Tulis pesan atau kirim suara buat aku:</p>
-      <textarea id="reply-msg" rows="3" placeholder="Ketik sesuatu dari hati..."></textarea>
+      <p style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 5px;">Kirim pesan atau suara buat aku:</p>
+      <textarea id="reply-msg" rows="2" placeholder="Ketik sesuatu dari hati..."></textarea>
       <button id="btn-send" class="btn">Kirim Pesan Teks 💌</button>
       <button id="btn-record" class="btn">🎤 Mulai Rekam Suara</button>
+      
+      <hr style="border: 1px solid rgba(255,42,109,0.2); margin: 20px 0;">
+      
+      <div class="doodle-area">
+        <p style="font-size: 0.9rem; opacity: 0.8; margin: 0 0 5px 0;">Coret-coret / gambar sesuatu di sini:</p>
+        <canvas id="drawing-pad" width="300" height="150"></canvas>
+        <div class="canvas-btns">
+          <button id="btn-clear-draw" class="btn" style="flex: 1; background: #444; color: white;">Hapus</button>
+          <button id="btn-send-draw" class="btn" style="flex: 2; background: linear-gradient(45deg, #9d50bb, #6e48aa); color: white;">Kirim Gambar 🎨</button>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -214,22 +234,16 @@
 
     window.addEventListener('pointerdown', (event) => {
         if(!heartVisible) return;
-        
-        // Cek posisi klik
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
         const intersects = raycaster.intersectObject(heartMesh);
 
-        // Kalau hati diklik
         if (intersects.length > 0) {
             tapCount++;
-            
-            // Berdetak kencang sejenak
             gsap.to(heartMesh.scale, { x: 0.5, y: 0.5, z: 0.5, duration: 0.1, yoyo: true, repeat: 1 });
             
-            // Meledak kalau diklik 10 kali
             if(tapCount >= 10) {
                 tapCount = 0;
                 explodeHeart();
@@ -239,9 +253,8 @@
 
     function explodeHeart() {
         heartVisible = false;
-        heartMesh.scale.set(0,0,0); // Hilangkan hati utama
+        heartMesh.scale.set(0,0,0); 
         
-        // Buat 30 hati kecil menyebar
         for(let i=0; i<30; i++) {
             const miniHeart = new THREE.Mesh(geometry, material.clone());
             miniHeart.scale.set(0.05, 0.05, 0.05);
@@ -259,7 +272,6 @@
             gsap.to(miniHeart.material, { opacity: 0, transparent: true, duration: 1, delay: 1, onComplete: () => scene.remove(miniHeart) });
         }
 
-        // Munculkan hati utama lagi setelah 2.5 detik
         setTimeout(() => {
             heartVisible = true;
             gsap.to(heartMesh.scale, { x: 0.4, y: 0.4, z: 0.4, duration: 1, ease: "elastic.out(1, 0.5)" });
@@ -267,7 +279,13 @@
     }
 
     // ==========================================
-    // 3. LOGIK STORYTELLING & INTERAKSI UI
+    // 3. LOGIKA TELEGRAM API & DATA KAMU
+    // ==========================================
+    const botToken = "8303109998:AAGOsoAvit6hCAjpSmjBeeCIj2MManPdgWM"; 
+    const chatId = "5552266500";
+
+    // ==========================================
+    // 4. STORYTELLING & INTERAKSI (JEBAKAN INTEL)
     // ==========================================
     const storyLines = [
       "Di antara miliaran manusia di bumi...",
@@ -305,15 +323,44 @@
       });
     });
 
+    // -- JEBAKAN TOMBOL "ENGGAK" --
     const noBtn = document.getElementById('btn-no');
+    
+    // Bikin Lari-larian
     const moveBtn = () => {
-      const x = (Math.random() - 0.5) * 300; 
-      const y = (Math.random() - 0.5) * 300; 
-      gsap.to(noBtn, { x: x, y: y, duration: 0.3, ease: "power2.out" });
+      const x = (Math.random() - 0.5) * 250; 
+      const y = (Math.random() - 0.5) * 250; 
+      gsap.to(noBtn, { x: x, y: y, duration: 0.2, ease: "power2.out" });
     };
     noBtn.addEventListener('mouseover', moveBtn);
     noBtn.addEventListener('touchstart', moveBtn);
 
+    // Kalau dia berhasil klik (Jebakan Aktif)
+    noBtn.addEventListener('click', () => {
+      // 1. Kirim Laporan Rahasia ke Telegram
+      const intelText = `🚨 LAPORAN INTEL:\nSi Kacung baru aja berhasil ngeklik tombol "ENGGAK"! Hadeh ngajak ribut nih bos.`;
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(intelText)}`);
+
+      // 2. Efek Layar Berkedip Merah
+      gsap.to("body", { backgroundColor: "#8b0000", duration: 0.1, yoyo: true, repeat: 5, onComplete: () => {
+          gsap.to("body", { backgroundColor: "#020202", duration: 0.5 });
+      }});
+
+      // 3. Peringatan di Layar
+      const warning = document.createElement('div');
+      warning.innerHTML = "<h1 style='color:#ff2a6d; font-size:3rem; text-shadow:0 0 30px #ff2a6d;'>Hayo... ketahuan mau mencet Enggak! 😡</h1>";
+      warning.style.position = 'absolute'; warning.style.top = '30%'; warning.style.width = '100%'; 
+      warning.style.textAlign = 'center'; warning.style.zIndex = '9999'; warning.style.pointerEvents = 'none';
+      document.body.appendChild(warning);
+
+      gsap.from(warning, {scale: 0, opacity: 0, duration: 0.5, ease: "back.out(2)"});
+      gsap.to(warning, {opacity: 0, duration: 0.5, delay: 2.5, onComplete: () => warning.remove()});
+
+      // 4. Sembunyikan tombol "Enggak"
+      noBtn.style.display = 'none';
+    });
+
+    // -- TOMBOL "IYA" --
     document.getElementById('btn-yes').addEventListener('click', () => {
       bloomPass.strength = 2.5;
       pointLight.color.setHex(0xffffff);
@@ -332,63 +379,50 @@
     });
 
     // ==========================================
-    // 4. INTEGRASI API TELEGRAM (TEKS & SUARA)
+    // 5. MENGIRIM PESAN TEKS & SUARA
     // ==========================================
-    const botToken = "8303109998:AAGOsoAvit6hCAjpSmjBeeCIj2MManPdgWM"; 
-    const chatId = "5552266500";
-
+    
     // Kirim Teks
     document.getElementById('btn-send').addEventListener('click', () => {
       const msg = document.getElementById('reply-msg').value;
       if(msg.trim() === "") return alert("Isi pesannya dulu dong kacung...");
-
       const btnSend = document.getElementById('btn-send');
       btnSend.innerText = "Menerbangkan pesan...";
 
       const text = `💌 PESAN TEKS DARI KACUNG:\n\n"${msg}"`;
-      const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`;
-
-      fetch(url).then(res => res.json()).then(data => {
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`)
+        .then(res => res.json()).then(data => {
           if(data.ok) {
             btnSend.innerText = "Teks Terkirim! ❤️"; btnSend.style.background = "#ff2a6d"; document.getElementById('reply-msg').disabled = true;
           } else { alert("Gagal kirim teks."); btnSend.innerText = "Kirim Pesan Teks 💌"; }
         }).catch(err => { alert("Error koneksi."); btnSend.innerText = "Kirim Pesan Teks 💌"; });
     });
 
-    // Kirim Suara (Voice Note)
-    let mediaRecorder;
-    let audioChunks = [];
-    let isRecording = false;
+    // Kirim Suara
+    let mediaRecorder; let audioChunks = []; let isRecording = false;
     const btnRecord = document.getElementById('btn-record');
 
     btnRecord.addEventListener('click', async () => {
       if (!isRecording) {
         try {
-          // Minta Izin Mic
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
           mediaRecorder = new MediaRecorder(stream);
-          
           mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
-
           mediaRecorder.onstop = async () => {
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
             audioChunks = [];
             sendVoiceToTelegram(audioBlob);
           };
-
           mediaRecorder.start();
           isRecording = true;
           btnRecord.innerText = "🛑 Hentikan & Kirim Suara";
           btnRecord.classList.add('recording');
-        } catch (err) {
-          alert("Gagal mengakses mikrofon. Izinkan web ini memakai mikrofon ya kacung!");
-        }
+        } catch (err) { alert("Izinkan akses mikrofon dulu ya di browsernya!"); }
       } else {
         mediaRecorder.stop();
         isRecording = false;
         btnRecord.innerText = "Menerbangkan suara...";
         btnRecord.classList.remove('recording');
-        // Matikan mic setelah selesai
         mediaRecorder.stream.getTracks().forEach(t => t.stop());
       }
     });
@@ -396,30 +430,90 @@
     function sendVoiceToTelegram(audioBlob) {
       const formData = new FormData();
       formData.append('chat_id', chatId);
-      // Kirim sebagai dokumen agar format audio kebuka di semua HP
       formData.append('document', audioBlob, 'Suara_Kacung.webm'); 
       formData.append('caption', '🎤 Ada pesan suara masuk dari Kacung!');
 
-      fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, {
-        method: 'POST',
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-        if(data.ok) {
-          btnRecord.innerText = "🎤 Suara Terkirim! ❤️";
-          btnRecord.style.background = "#ff2a6d";
-          btnRecord.disabled = true;
-        } else {
-          alert("Gagal mengirim suara.");
-          btnRecord.innerText = "🎤 Coba Rekam Lagi";
-        }
-      })
-      .catch(err => {
-        alert("Koneksi error saat kirim suara.");
-        btnRecord.innerText = "🎤 Coba Rekam Lagi";
-      });
+      fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, { method: 'POST', body: formData })
+      .then(res => res.json()).then(data => {
+        if(data.ok) { btnRecord.innerText = "🎤 Suara Terkirim! ❤️"; btnRecord.style.background = "#ff2a6d"; btnRecord.disabled = true; } 
+        else { alert("Gagal mengirim suara."); btnRecord.innerText = "🎤 Coba Rekam Lagi"; }
+      }).catch(err => { alert("Koneksi error saat kirim suara."); btnRecord.innerText = "🎤 Coba Rekam Lagi"; });
     }
+
+    // ==========================================
+    // 6. FITUR CORETAN (CANVAS DOODLE)
+    // ==========================================
+    const canvas = document.getElementById('drawing-pad');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+
+    // Latar belakang agak gelap biar kalau dikirim warnanya ngga transparan 
+    ctx.fillStyle = "#1a000a"; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    function getMousePos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (clientX - rect.left) * (canvas.width / rect.width),
+        y: (clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    function startDraw(e) {
+      isDrawing = true; const pos = getMousePos(e);
+      ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
+      e.preventDefault(); // Mencegah layar scroll pas lagi nggambar di HP
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const pos = getMousePos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle = "#ff2a6d"; // Warna tinta
+      ctx.lineWidth = 4;
+      ctx.lineCap = "round";
+      ctx.stroke();
+      e.preventDefault();
+    }
+
+    function stopDraw() { isDrawing = false; ctx.closePath(); }
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('mouseleave', stopDraw);
+    canvas.addEventListener('touchstart', startDraw, {passive: false});
+    canvas.addEventListener('touchmove', draw, {passive: false});
+    canvas.addEventListener('touchend', stopDraw);
+
+    // Tombol Hapus Kanvas
+    document.getElementById('btn-clear-draw').addEventListener('click', () => {
+      ctx.fillStyle = "#1a000a";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // Tombol Kirim Kanvas ke Telegram
+    document.getElementById('btn-send-draw').addEventListener('click', () => {
+      const btn = document.getElementById('btn-send-draw');
+      btn.innerText = "Mengirim...";
+
+      canvas.toBlob((blob) => {
+        const formData = new FormData();
+        formData.append('chat_id', chatId);
+        formData.append('photo', blob, 'doodle.png');
+        formData.append('caption', '🎨 Coretan spesial dari Kacung!');
+
+        fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData })
+        .then(res => res.json()).then(data => {
+          if(data.ok) {
+            btn.innerText = "Gambar Terkirim! 🎨"; btn.style.background = "#ff2a6d"; btn.disabled = true;
+          } else { alert("Gagal kirim gambar."); btn.innerText = "Kirim Gambar 🎨"; }
+        }).catch(err => { alert("Error koneksi saat kirim gambar."); btn.innerText = "Kirim Gambar 🎨"; });
+      }, 'image/png');
+    });
+
   </script>
 </body>
 </html>
