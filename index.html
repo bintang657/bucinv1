@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Untuk Kamu ❤️</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================
+       STYLING AESTHETIC & ELEGANT
+       ========================================== */
+    body, html { 
+      margin: 0; padding: 0; width: 100%; height: 100%; 
+      overflow: hidden; background-color: #12050a; /* Deep rose dark background */
+      font-family: 'Poppins', sans-serif; 
+      color: #fce8ef; 
+    }
+    #canvas-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; }
+    
+    .ui-layer { 
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+      display: flex; flex-direction: column; justify-content: center; align-items: center; 
+      z-index: 2; pointer-events: none; text-align: center; 
+    }
+    
+    #start-screen { 
+      background: rgba(18, 5, 10, 0.85); z-index: 10; pointer-events: auto; 
+      backdrop-filter: blur(8px); cursor: pointer; transition: opacity 1.5s ease; 
+    }
+    .pulse-text { 
+      font-family: 'Playfair Display', serif; font-size: 1.8rem; font-style: italic;
+      letter-spacing: 2px; animation: pulse 3s infinite; color: #e8b4c8; 
+    }
+    
+    #story-text { 
+      font-family: 'Playfair Display', serif; font-size: 2.2rem; max-width: 80%; 
+      text-shadow: 0 0 15px rgba(232, 180, 200, 0.5); 
+      opacity: 0; font-weight: 400; font-style: italic; color: #fff0f5;
+    }
+
+    /* Kotak Interaksi Lebih Mewah (Soft Glass) */
+    .glass-card { 
+      background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); 
+      border: 1px solid rgba(255, 255, 255, 0.1); padding: 35px; border-radius: 16px; 
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(255,255,255,0.05); 
+      pointer-events: auto; display: none; opacity: 0; transform: translateY(20px); 
+      max-width: 90%; width: 420px; max-height: 85vh; overflow-y: auto; 
+    }
+    .glass-card::-webkit-scrollbar { display: none; }
+    
+    .glass-card h2 { font-family: 'Playfair Display', serif; color: #f5c6d6; font-size: 2rem; margin-top: 0; margin-bottom: 10px; font-weight: 600;}
+    
+    /* Tombol Elegan */
+    .btn { 
+      padding: 12px 20px; margin: 6px 0; font-size: 0.95rem; font-family: 'Poppins', sans-serif; font-weight: 500; 
+      border: 1px solid transparent; border-radius: 8px; cursor: pointer; transition: all 0.4s ease; width: 100%; letter-spacing: 0.5px;
+    }
+    
+    #btn-yes { background: #d47a8c; color: white; box-shadow: 0 4px 15px rgba(212, 122, 140, 0.3); width: auto; padding: 12px 35px; margin: 10px; border: 1px solid #e599a8;}
+    #btn-yes:hover { background: #e08b9c; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 122, 140, 0.5); }
+    #btn-no { background: transparent; color: #d47a8c; border: 1px solid #d47a8c; position: relative; width: auto; padding: 12px 35px; margin: 10px;}
+    
+    textarea { 
+      width: 100%; padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); 
+      background: rgba(0,0,0,0.3); color: #fff; font-family: 'Poppins', sans-serif; resize: none; 
+      box-sizing: border-box; margin-top: 10px; margin-bottom: 10px; font-size: 0.9rem; transition: 0.3s;
+    }
+    textarea:focus { outline: none; border-color: #d47a8c; background: rgba(0,0,0,0.5); }
+    
+    /* Tombol-tombol Fitur */
+    .btn-action { background: rgba(255,255,255,0.05); color: #fce8ef; border: 1px solid rgba(255,255,255,0.1); }
+    .btn-action:hover { background: rgba(255,255,255,0.1); }
+    
+    .recording { animation: blink 1.5s infinite; background: rgba(212, 122, 140, 0.2) !important; border-color: #d47a8c !important; color: #ffb6c1; }
+    
+    /* Area Kanvas & Kamera */
+    .doodle-area, .camera-area { margin-top: 20px; text-align: left; }
+    canvas#drawing-pad { border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(20, 10, 15, 0.5); width: 100%; height: 150px; touch-action: none; cursor: crosshair; }
+    .canvas-btns { display: flex; gap: 8px; margin-top: 8px; }
+
+    .video-container { width: 100%; height: 250px; background: rgba(20, 10, 15, 0.5); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; display: flex; justify-content: center; align-items: center; position: relative; }
+    #camera-stream { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); } 
+    .camera-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; justify-content: center; }
+    #post-take-btns { display: flex; width: 100%; gap: 8px; }
+
+    hr { border: 0; border-top: 1px solid rgba(255,255,255,0.05); margin: 25px 0; }
+
+    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+    @keyframes blink { 50% { opacity: 0.6; } }
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <audio id="bgm" src="music.mp3" loop></audio>
+  <div id="canvas-container"></div>
+  
+  <div id="start-screen" class="ui-layer">
+    <div class="pulse-text">Ketuk untuk membuka pesan...</div>
+  </div>
+
+  <div id="story-layer" class="ui-layer">
+    <div id="story-text"></div>
+  </div>
+
+  <div id="interaction-layer" class="ui-layer">
+    <div id="question-box" class="glass-card">
+      <h2>Hai, Kacung...</h2>
+      <p style="font-size: 1.1rem; margin-bottom: 30px; font-weight: 300; opacity: 0.9;">Setelah semua waktu yang terlewati, kamu masih sayang banget kan sama aku?</p>
+      <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap;">
+        <button id="btn-yes" class="btn">Pasti dong! ❤️</button>
+        <button id="btn-no" class="btn">Enggak</button>
+      </div>
+    </div>
+
+    <div id="reply-box" class="glass-card">
+      <h2>Aku juga sayang kamu.</h2>
+      
+      <p style="font-size: 0.85rem; opacity: 0.7; margin-bottom: 8px; font-weight: 300;">Kirim pesan atau suara untukku:</p>
+      <textarea id="reply-msg" rows="2" placeholder="Tulis sesuatu dari hati..."></textarea>
+      <button id="btn-send" class="btn btn-action">Kirim Pesan Teks 💌</button>
+      <button id="btn-record" class="btn btn-action">🎤 Mulai Rekam Suara</button>
+      
+      <hr>
+      
+      <div class="doodle-area">
+        <p style="font-size: 0.85rem; opacity: 0.7; margin: 0 0 8px 0; font-weight: 300;">Gambarlah sesuatu di sini:</p>
+        <canvas id="drawing-pad" width="300" height="150"></canvas>
+        <div class="canvas-btns">
+          <button id="btn-clear-draw" class="btn btn-action" style="flex: 1;">Hapus</button>
+          <button id="btn-send-draw" class="btn" style="flex: 2; background: #d47a8c; color: white;">Kirim Gambar 🎨</button>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="camera-area">
+        <p style="font-size: 0.85rem; opacity: 0.7; margin: 0 0 8px 0; font-weight: 300;">Kirim selfie terbaikmu untukku:</p>
+        <div class="video-container">
+            <video id="camera-stream" autoplay playsinline></video>
+            <canvas id="photo-canvas" style="display:none;"></canvas>
+        </div>
+        <div class="camera-btns">
+          <button id="btn-start-cam" class="btn btn-action">📸 Buka Kamera</button>
+          <button id="btn-take-photo" class="btn" style="display:none; background: #d47a8c; color: white;">Jepret Foto 📸</button>
+          <div id="post-take-btns" style="display:none;">
+            <button id="btn-retake" class="btn btn-action" style="flex:1;">Ulang</button>
+            <button id="btn-send-photo" class="btn" style="flex:2; background: #d47a8c; color: white;">Kirim Foto 📤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+    // ==========================================
+    // 1. SETUP 3D AESTHETIC & SOFT BLOOM
+    // ==========================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x12050a, 0.04); // Soft dark rose fog
+
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 15;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; // Cinematic lighting
+    renderer.toneMappingExposure = 1.0;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableZoom = false; controls.autoRotate = true; controls.autoRotateSpeed = 0.5; // Rotasi lambat kalem
+
+    // Soft Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5)); // Soft white ambient
+    const dirLight = new THREE.DirectionalLight(0xffd1dc, 1); // Soft pink light
+    dirLight.position.set(5, 5, 5);
+    scene.add(dirLight);
+    const pointLight = new THREE.PointLight(0xd47a8c, 2, 30);
+    pointLight.position.set(0, 0, 5);
+    scene.add(pointLight);
+
+    const sceneGroup = new THREE.Group();
+    scene.add(sceneGroup);
+
+    // Partikel Halus (Bukan bintang jamet)
+    const starsGeo = new THREE.BufferGeometry();
+    const starsVert = [];
+    for(let i=0; i<1500; i++) { // Kurangi jumlah partikel biar elegan
+        starsVert.push(THREE.MathUtils.randFloatSpread(100), THREE.MathUtils.randFloatSpread(100), THREE.MathUtils.randFloatSpread(100));
+    }
+    starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starsVert, 3));
+    
+    // Bikin tekstur bulat halus untuk partikel
+    const canvas = document.createElement('canvas');
+    canvas.width = 16; canvas.height = 16;
+    const context = canvas.getContext('2d');
+    const gradient = context.createRadialGradient(8, 8, 0, 8, 8, 8);
+    gradient.addColorStop(0, 'rgba(255,255,255,1)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    context.fillStyle = gradient;
+    context.fillRect(0,0,16,16);
+    const particleTexture = new THREE.CanvasTexture(canvas);
+
+    const starsMat = new THREE.PointsMaterial({ 
+      color: 0xffe6fa, size: 0.3, transparent: true, opacity: 0.6, 
+      map: particleTexture, blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const starField = new THREE.Points(starsGeo, starsMat);
+    sceneGroup.add(starField);
+
+    // MATERIAL HATI KACA (CRYSTAL / FROSTED GLASS)
+    const heartShape = new THREE.Shape();
+    const x = 0, y = 0;
+    heartShape.moveTo(x + 2.5, y + 2.5);
+    heartShape.bezierCurveTo(x + 2.5, y + 2.5, x + 2.0, y, x, y);
+    heartShape.bezierCurveTo(x - 3.0, y, x - 3.0, y + 3.5, x - 3.0, y + 3.5);
+    heartShape.bezierCurveTo(x - 3.0, y + 5.5, x - 1.0, y + 7.7, x + 2.5, y + 9.5);
+    heartShape.bezierCurveTo(x + 6.0, y + 7.7, x + 8.0, y + 5.5, x + 8.0, y + 3.5);
+    heartShape.bezierCurveTo(x + 8.0, y + 3.5, x + 8.0, y, x + 5.0, y);
+    heartShape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
+
+    const geometry = new THREE.ExtrudeGeometry(heartShape, { depth: 1.0, bevelEnabled: true, bevelSegments: 6, steps: 2, bevelSize: 0.4, bevelThickness: 0.4 });
+    geometry.center();
+    
+    const material = new THREE.MeshPhysicalMaterial({ 
+      color: 0xffb6c1,         // Soft pink
+      metalness: 0.1,
+      roughness: 0.2,          // Sedikit buram ala frosted glass
+      transmission: 0.9,       // Transparan tembus pandang
+      thickness: 1.5,
+      emissive: 0x3a0018,      // Inner glow sangat redup
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.1
+    });
+
+    const heartMesh = new THREE.Mesh(geometry, material);
+    heartMesh.rotation.x = Math.PI;
+    heartMesh.scale.set(0, 0, 0); 
+    sceneGroup.add(heartMesh);
+
+    // Post-Processing (Soft Glow Bloom)
+    const renderScene = new RenderPass(scene, camera);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+    bloomPass.threshold = 0.2; 
+    bloomPass.strength = 0.5; // Bloom kalem, gak silau
+    bloomPass.radius = 1.0;
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(renderScene); composer.addPass(bloomPass);
+
+    // ==========================================
+    // GYROSCOPE (PARALLAX)
+    // ==========================================
+    let gyroX = 0; let gyroY = 0;
+    
+    document.addEventListener('mousemove', (e) => {
+      gyroX = (e.clientX / window.innerWidth - 0.5) * 1.0;
+      gyroY = (e.clientY / window.innerHeight - 0.5) * 1.0;
+    });
+
+    function setupGyroscope() {
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission().then(state => {
+          if (state === 'granted') window.addEventListener('deviceorientation', handleOrientation);
+        }).catch(console.error);
+      } else { window.addEventListener('deviceorientation', handleOrientation); }
+    }
+
+    function handleOrientation(e) {
+      let gamma = e.gamma || 0; let beta = e.beta || 0;
+      if(gamma > 45) gamma = 45; if(gamma < -45) gamma = -45;
+      if(beta > 80) beta = 80; if(beta < 10) beta = 10;
+      gyroX = gamma / 45; gyroY = (beta - 45) / 35;
+    }
+
+    // ==========================================
+    // LOOP ANIMASI ELEGAN
+    // ==========================================
+    const clock = new THREE.Clock();
+    let heartVisible = false;
+
+    function animate() {
+        requestAnimationFrame(animate);
+        const time = clock.getElapsedTime();
+        
+        sceneGroup.rotation.y += (gyroX * 0.3 - sceneGroup.rotation.y) * 0.05;
+        sceneGroup.rotation.x += (gyroY * 0.3 - sceneGroup.rotation.x) * 0.05;
+
+        starField.rotation.y += 0.0003; // Putaran kunang-kunang sangat lambat
+        starField.rotation.x += 0.0001;
+
+        if (heartVisible) {
+            const pulse = 0.4 + Math.sin(time * 3) * 0.015; // Detak halus
+            heartMesh.scale.lerp(new THREE.Vector3(pulse, pulse, pulse), 0.05);
+            heartMesh.position.y = Math.sin(time * 1.5) * 0.3; // Melayang halus
+        }
+        
+        controls.update(); composer.render(); 
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // ==========================================
+    // EASTER EGG ELEGAN - KLIK HATI
+    // ==========================================
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let tapCount = 0;
+
+    window.addEventListener('pointerdown', (event) => {
+        if(!heartVisible) return;
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        
+        const intersects = raycaster.intersectObject(heartMesh);
+        if (intersects.length > 0) {
+            tapCount++;
+            gsap.to(heartMesh.scale, { x: 0.45, y: 0.45, z: 0.45, duration: 0.3, ease: "power2.out", yoyo: true, repeat: 1 });
+            if(tapCount >= 10) { tapCount = 0; explodeHeartElegant(); }
+        }
+    });
+
+    function explodeHeartElegant() {
+        heartVisible = false; heartMesh.scale.set(0,0,0); 
+        for(let i=0; i<20; i++) {
+            const miniHeart = new THREE.Mesh(geometry, material.clone());
+            miniHeart.scale.set(0.05, 0.05, 0.05); miniHeart.rotation.x = Math.PI; sceneGroup.add(miniHeart);
+            const angle = Math.random() * Math.PI * 2; const radius = Math.random() * 5 + 2;
+            const targetX = Math.cos(angle) * radius; const targetY = Math.sin(angle) * radius + (Math.random()*4); const targetZ = (Math.random() - 0.5) * 5;
+            // Menyebar lambat seperti gelembung
+            gsap.to(miniHeart.position, { x: targetX, y: targetY, z: targetZ, duration: 3, ease: "power1.out" });
+            gsap.to(miniHeart.rotation, { x: Math.random()*Math.PI, y: Math.random()*Math.PI, duration: 4 });
+            gsap.to(miniHeart.material, { transmission: 1, opacity: 0, transparent: true, duration: 2, delay: 1.5, onComplete: () => sceneGroup.remove(miniHeart) });
+        }
+        setTimeout(() => { heartVisible = true; gsap.to(heartMesh.scale, { x: 0.4, y: 0.4, z: 0.4, duration: 2, ease: "power2.out" }); }, 3500);
+    }
+
+    // ==========================================
+    // TELEGRAM API 
+    // ==========================================
+    const botToken = "8303109998:AAGOsoAvit6hCAjpSmjBeeCIj2MManPdgWM"; 
+    const chatId = "5552266500";
+
+    // ==========================================
+    // STORYTELLING & INTERAKSI
+    // ==========================================
+    const storyLines = [
+      "Di antara riuhnya isi dunia...",
+      "Pikiranku selalu menemukan jalannya menujumu.",
+      "Terdengar sederhana...",
+      "Tapi kamu adalah hal terindah yang kumiliki."
+    ];
+
+    const startScreen = document.getElementById('start-screen');
+    const storyText = document.getElementById('story-text');
+    const questionBox = document.getElementById('question-box');
+    const replyBox = document.getElementById('reply-box');
+
+    startScreen.addEventListener('click', () => {
+      startScreen.style.opacity = '0';
+      setTimeout(() => startScreen.style.display = 'none', 1500);
+      setupGyroscope(); 
+      
+      const bgm = document.getElementById('bgm');
+      bgm.volume = 0; bgm.play().catch(e => console.log("Audio error:", e));
+      gsap.to(bgm, { volume: 0.6, duration: 5 }); // Fade in lambat
+
+      const tl = gsap.timeline();
+      storyLines.forEach((line) => {
+        tl.call(() => { storyText.innerText = line; })
+          .to(storyText, { opacity: 1, duration: 2, ease: "power2.inOut" })
+          .to(storyText, { opacity: 0, duration: 2, ease: "power2.inOut", delay: 2 });
+      });
+      tl.call(() => {
+        heartVisible = true; 
+        gsap.to(camera.position, { z: 12, duration: 4, ease: "power2.inOut" });
+        questionBox.style.display = 'block';
+        gsap.to(questionBox, { opacity: 1, y: 0, duration: 1.5, ease: "power2.out", delay: 1 });
+      });
+    });
+
+    // JEBAKAN TOMBOL "ENGGAK" KALEM
+    const noBtn = document.getElementById('btn-no');
+    const moveBtn = () => {
+      const x = (Math.random() - 0.5) * 200; const y = (Math.random() - 0.5) * 200; 
+      gsap.to(noBtn, { x: x, y: y, duration: 0.4, ease: "power2.out" });
+    };
+    noBtn.addEventListener('mouseover', moveBtn); noBtn.addEventListener('touchstart', moveBtn);
+
+    noBtn.addEventListener('click', () => {
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent("🚨 Kacung ngeklik tombol ENGGAK.")}`);
+      gsap.to("body", { backgroundColor: "#3a0008", duration: 0.2, yoyo: true, repeat: 3, onComplete: () => { gsap.to("body", { backgroundColor: "#12050a", duration: 1 }); }});
+      const warning = document.createElement('div');
+      warning.innerHTML = "<h2 style='font-family:Playfair Display; color:#d47a8c; font-style:italic;'>Hmm... Yakin mau pencet itu?</h2>";
+      warning.style.position = 'absolute'; warning.style.top = '20%'; warning.style.width = '100%'; warning.style.textAlign = 'center'; warning.style.zIndex = '9999'; warning.style.pointerEvents = 'none';
+      document.body.appendChild(warning);
+      gsap.from(warning, {opacity: 0, y: 20, duration: 1});
+      gsap.to(warning, {opacity: 0, duration: 1, delay: 2, onComplete: () => warning.remove()});
+      noBtn.style.display = 'none';
+    });
+
+    // TOMBOL "IYA"
+    document.getElementById('btn-yes').addEventListener('click', () => {
+      // Glow elegant
+      gsap.to(bloomPass, { strength: 1.0, duration: 2 });
+      
+      // Animasi Putaran Halus
+      gsap.to(sceneGroup.rotation, { y: sceneGroup.rotation.y + Math.PI * 2, duration: 5, ease: "power2.inOut" });
+      
+      // Confetti pastel
+      confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 }, colors: ['#ffb6c1', '#fce8ef', '#d47a8c', '#ffd700'], zIndex: 9999, gravity: 0.5 });
+      
+      gsap.to(questionBox, { opacity: 0, y: -20, duration: 1, onComplete: () => {
+        questionBox.style.display = 'none'; replyBox.style.display = 'block';
+        gsap.to(replyBox, { opacity: 1, y: 0, duration: 1.5, ease: "power2.out", delay: 0.5 });
+      }});
+    });
+
+    // ==========================================
+    // LOGIKA FITUR (TEKS, SUARA, DOODLE, KAMERA)
+    // ==========================================
+    
+    document.getElementById('btn-send').addEventListener('click', () => {
+      const msg = document.getElementById('reply-msg').value;
+      if(msg.trim() === "") return;
+      const btnSend = document.getElementById('btn-send'); btnSend.innerText = "Mengirim...";
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(`💌 Pesan dari Kacung:\n\n"${msg}"`)}`)
+        .then(res => res.json()).then(data => {
+          if(data.ok) { btnSend.innerText = "Terkirim ✨"; btnSend.style.background = "#d47a8c"; btnSend.style.color = "white"; document.getElementById('reply-msg').disabled = true; } 
+          else { btnSend.innerText = "Kirim Pesan Teks 💌"; }
+        }).catch(err => { btnSend.innerText = "Kirim Pesan Teks 💌"; });
+    });
+
+    let mediaRecorder; let audioChunks = []; let isRecording = false;
+    const btnRecord = document.getElementById('btn-record');
+    btnRecord.addEventListener('click', async () => {
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
+          mediaRecorder.onstop = async () => { const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); audioChunks = []; sendVoiceToTelegram(audioBlob); };
+          mediaRecorder.start(); isRecording = true; btnRecord.innerText = "🛑 Selesai Merekam"; btnRecord.classList.add('recording');
+        } catch (err) { alert("Izinkan akses mikrofon di browser."); }
+      } else {
+        mediaRecorder.stop(); isRecording = false; btnRecord.innerText = "Mengirim suara..."; btnRecord.classList.remove('recording');
+        mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      }
+    });
+    function sendVoiceToTelegram(audioBlob) {
+      const formData = new FormData(); formData.append('chat_id', chatId); formData.append('document', audioBlob, 'Voice.webm'); formData.append('caption', '🎤 Pesan Suara dari Kacung');
+      fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, { method: 'POST', body: formData })
+      .then(res => res.json()).then(data => {
+        if(data.ok) { btnRecord.innerText = "Suara Terkirim ✨"; btnRecord.style.background = "#d47a8c"; btnRecord.style.color="white"; btnRecord.disabled = true; } 
+        else { btnRecord.innerText = "🎤 Coba Lagi"; }
+      }).catch(err => { btnRecord.innerText = "🎤 Coba Lagi"; });
+    }
+
+    const canvasDraw = document.getElementById('drawing-pad'); const ctx = canvasDraw.getContext('2d'); let isDrawing = false;
+    ctx.fillStyle = "#140a0f"; ctx.fillRect(0, 0, canvasDraw.width, canvasDraw.height);
+    function getMousePos(e) { const rect = canvasDraw.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: (clientX - rect.left) * (canvasDraw.width / rect.width), y: (clientY - rect.top) * (canvasDraw.height / rect.height) }; }
+    function startDraw(e) { isDrawing = true; const pos = getMousePos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); e.preventDefault(); }
+    function draw(e) { if (!isDrawing) return; const pos = getMousePos(e); ctx.lineTo(pos.x, pos.y); ctx.strokeStyle = "#e8b4c8"; ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.stroke(); e.preventDefault(); }
+    function stopDraw() { isDrawing = false; ctx.closePath(); }
+    canvasDraw.addEventListener('mousedown', startDraw); canvasDraw.addEventListener('mousemove', draw); canvasDraw.addEventListener('mouseup', stopDraw); canvasDraw.addEventListener('mouseleave', stopDraw);
+    canvasDraw.addEventListener('touchstart', startDraw, {passive: false}); canvasDraw.addEventListener('touchmove', draw, {passive: false}); canvasDraw.addEventListener('touchend', stopDraw);
+    document.getElementById('btn-clear-draw').addEventListener('click', () => { ctx.fillStyle = "#140a0f"; ctx.fillRect(0, 0, canvasDraw.width, canvasDraw.height); });
+    document.getElementById('btn-send-draw').addEventListener('click', () => {
+      const btn = document.getElementById('btn-send-draw'); btn.innerText = "Mengirim...";
+      canvasDraw.toBlob((blob) => {
+        const formData = new FormData(); formData.append('chat_id', chatId); formData.append('photo', blob, 'doodle.png'); formData.append('caption', '🎨 Coretan dari Kacung');
+        fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData })
+        .then(res => res.json()).then(data => { if(data.ok) { btn.innerText = "Gambar Terkirim ✨"; btn.disabled = true; } else { btn.innerText = "Kirim Gambar 🎨"; }})
+      }, 'image/png');
+    });
+
+    const videoEl = document.getElementById('camera-stream');
+    const photoCanvas = document.getElementById('photo-canvas'); const photoCtx = photoCanvas.getContext('2d'); let streamObj = null;
+    document.getElementById('btn-start-cam').addEventListener('click', async () => {
+      try {
+        streamObj = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }); videoEl.srcObject = streamObj;
+        document.getElementById('btn-start-cam').style.display = 'none'; document.getElementById('btn-take-photo').style.display = 'inline-block';
+      } catch (err) { alert("Izinkan akses kamera di browser."); }
+    });
+    document.getElementById('btn-take-photo').addEventListener('click', () => {
+      photoCanvas.width = videoEl.videoWidth; photoCanvas.height = videoEl.videoHeight;
+      photoCtx.translate(photoCanvas.width, 0); photoCtx.scale(-1, 1); 
+      photoCtx.drawImage(videoEl, 0, 0, photoCanvas.width, photoCanvas.height); videoEl.pause();
+      document.getElementById('btn-take-photo').style.display = 'none'; document.getElementById('post-take-btns').style.display = 'flex';
+    });
+    document.getElementById('btn-retake').addEventListener('click', () => {
+      videoEl.play(); document.getElementById('post-take-btns').style.display = 'none'; document.getElementById('btn-take-photo').style.display = 'inline-block';
+    });
+    document.getElementById('btn-send-photo').addEventListener('click', () => {
+      const btn = document.getElementById('btn-send-photo'); btn.innerText = "Mengirim...";
+      photoCanvas.toBlob((blob) => {
+        const formData = new FormData(); formData.append('chat_id', chatId); formData.append('photo', blob, 'selfie.png'); formData.append('caption', '📸 Selfie dari Kacung');
+        fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData })
+        .then(res => res.json()).then(data => {
+          if(data.ok) { btn.innerText = "Foto Terkirim ✨"; btn.disabled = true; document.getElementById('btn-retake').style.display = 'none'; if(streamObj) streamObj.getTracks().forEach(track => track.stop()); } 
+          else { btn.innerText = "Kirim Foto 📤"; }
+        });
+      }, 'image/png');
+    });
+
+  </script>
+</body>
+</html>
