@@ -5,33 +5,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Untuk Kamu ❤️</title>
   <style>
-    /* Styling Dasar & Reset */
-    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #020202; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white; }
+    /* ==========================================
+       STYLING DASAR & UI KACA (GLASSMORPHISM)
+       ========================================== */
+    body, html { 
+      margin: 0; padding: 0; width: 100%; height: 100%; 
+      overflow: hidden; background-color: #020202; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      color: white; 
+    }
     #canvas-container { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; }
     
-    /* Layer UI */
-    .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2; pointer-events: none; text-align: center; }
+    .ui-layer { 
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+      display: flex; flex-direction: column; justify-content: center; align-items: center; 
+      z-index: 2; pointer-events: none; text-align: center; 
+    }
     
-    /* Layar Pembuka */
-    #start-screen { background: rgba(0,0,0,0.8); z-index: 10; pointer-events: auto; backdrop-filter: blur(5px); cursor: pointer; transition: opacity 1s ease; }
-    .pulse-text { font-size: 1.5rem; letter-spacing: 2px; animation: pulse 2s infinite; color: #ff8eac; }
+    /* Layar Pembuka (Tap to Start) */
+    #start-screen { 
+      background: rgba(0,0,0,0.8); z-index: 10; pointer-events: auto; 
+      backdrop-filter: blur(5px); cursor: pointer; transition: opacity 1s ease; 
+    }
+    .pulse-text { 
+      font-size: 1.5rem; letter-spacing: 2px; animation: pulse 2s infinite; color: #ff8eac; 
+    }
     
-    /* Layar Cerita */
-    #story-text { font-size: 2rem; max-width: 80%; text-shadow: 0 0 20px #ff2a6d; opacity: 0; font-weight: 300; font-style: italic; }
+    /* Layar Teks Cerita */
+    #story-text { 
+      font-size: 2rem; max-width: 80%; text-shadow: 0 0 20px #ff2a6d; 
+      opacity: 0; font-weight: 300; font-style: italic; 
+    }
 
-    /* Glassmorphism Card (Untuk Pertanyaan & Form) */
-    .glass-card { background: rgba(20, 0, 10, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 42, 109, 0.3); padding: 40px; border-radius: 20px; box-shadow: 0 0 40px rgba(255, 42, 109, 0.2); pointer-events: auto; display: none; opacity: 0; transform: translateY(20px); max-width: 90%; width: 400px; }
+    /* Kotak Pertanyaan & Form Telegram */
+    .glass-card { 
+      background: rgba(20, 0, 10, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+      border: 1px solid rgba(255, 42, 109, 0.3); padding: 40px; border-radius: 20px; 
+      box-shadow: 0 0 40px rgba(255, 42, 109, 0.2); pointer-events: auto; 
+      display: none; opacity: 0; transform: translateY(20px); max-width: 90%; width: 400px; 
+    }
     
-    .btn { padding: 12px 30px; margin: 10px; font-size: 1.1rem; font-weight: bold; border: none; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; }
+    .btn { 
+      padding: 12px 30px; margin: 10px; font-size: 1.1rem; font-weight: bold; 
+      border: none; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; 
+    }
     #btn-yes { background: linear-gradient(45deg, #ff2a6d, #ff7b9c); color: white; box-shadow: 0 0 20px rgba(255,42,109,0.5); }
     #btn-yes:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(255,42,109,0.8); }
     #btn-no { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); position: relative; }
     
-    textarea { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid rgba(255,42,109,0.4); background: rgba(0,0,0,0.6); color: white; font-family: inherit; resize: none; box-sizing: border-box; margin-top: 15px; margin-bottom: 15px; font-size: 1rem; }
+    textarea { 
+      width: 100%; padding: 15px; border-radius: 12px; border: 1px solid rgba(255,42,109,0.4); 
+      background: rgba(0,0,0,0.6); color: white; font-family: inherit; resize: none; 
+      box-sizing: border-box; margin-top: 15px; margin-bottom: 15px; font-size: 1rem; 
+    }
     textarea:focus { outline: none; border-color: #ff2a6d; box-shadow: 0 0 15px rgba(255,42,109,0.3); }
     #btn-send { background: linear-gradient(45deg, #00e676, #00b35c); color: white; width: 100%; box-shadow: 0 0 20px rgba(0,230,118,0.4); }
 
-    @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.5; transform: scale(0.95); } }
+    @keyframes pulse { 
+      0% { opacity: 0.5; transform: scale(0.95); } 
+      50% { opacity: 1; transform: scale(1.05); } 
+      100% { opacity: 0.5; transform: scale(0.95); } 
+    }
   </style>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -63,14 +97,14 @@
     
     <div id="question-box" class="glass-card">
       <h2 style="margin-top:0; color: #ff8eac;">Hai, Kesayangan...</h2>
-      <p style="font-size: 1.2rem; margin-bottom: 30px;">Setelah semua perjalanan ini, kamu masih sayang banget kan sama aku?</p>
+      <p style="font-size: 1.2rem; margin-bottom: 30px;">Setelah semua ini, kamu masih sayang banget kan sama aku?</p>
       <button id="btn-yes" class="btn">Pasti dong! ❤️</button>
       <button id="btn-no" class="btn">Enggak 👎</button>
     </div>
 
     <div id="reply-box" class="glass-card">
       <h2 style="margin-top:0; color: #00e676;">Aku juga sayang kamu! 💕</h2>
-      <p style="font-size: 1rem; opacity: 0.8;">Tulis dong pesan rahasia atau harapan kamu buat kita ke depannya:</p>
+      <p style="font-size: 1rem; opacity: 0.8;">Tulis pesan rahasia buat aku dong:</p>
       <textarea id="reply-msg" rows="4" placeholder="Ketik sesuatu dari hati..."></textarea>
       <button id="btn-send" class="btn">Kirim Pesan 💌</button>
     </div>
@@ -85,11 +119,11 @@
     import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
     // ==========================================
-    // 1. SETUP 3D & EFEK BLOOM (SINEMATIK)
+    // 1. SETUP 3D & EFEK BLOOM (GLOWING)
     // ==========================================
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x020202, 0.05); // Efek kabut jauh
+    scene.fog = new THREE.FogExp2(0x020202, 0.05);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 15;
@@ -103,13 +137,12 @@
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableZoom = false; controls.autoRotate = true; controls.autoRotateSpeed = 1.0;
 
-    // Pencahayaan Dramatis
     scene.add(new THREE.AmbientLight(0x222222));
     const pointLight = new THREE.PointLight(0xff2a6d, 2, 50);
     pointLight.position.set(0, 0, 5);
     scene.add(pointLight);
 
-    // Bintang yang Bercahaya
+    // Membuat Bintang
     const starsGeo = new THREE.BufferGeometry();
     const starsVert = [];
     for(let i=0; i<4000; i++) {
@@ -120,7 +153,7 @@
     const starField = new THREE.Points(starsGeo, starsMat);
     scene.add(starField);
 
-    // Hati 3D (Awalnya disembunyikan/scale 0)
+    // Membuat Hati 3D (Mulai dari ukuran 0)
     const heartShape = new THREE.Shape();
     const x = 0, y = 0;
     heartShape.moveTo(x + 2.5, y + 2.5);
@@ -136,19 +169,16 @@
     const material = new THREE.MeshStandardMaterial({ color: 0xff0040, roughness: 0.1, metalness: 0.5, emissive: 0x440011 });
     const heartMesh = new THREE.Mesh(geometry, material);
     heartMesh.rotation.x = Math.PI;
-    heartMesh.scale.set(0, 0, 0); // Mulai dari kecil
+    heartMesh.scale.set(0, 0, 0); 
     scene.add(heartMesh);
 
-    // Efek Post-Processing (Bikin Glowing)
+    // Post-Processing (Bikin objek menyala/glowing)
     const renderScene = new RenderPass(scene, camera);
     const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-    bloomPass.threshold = 0;
-    bloomPass.strength = 1.2; // Intensitas glow
-    bloomPass.radius = 0.5;
+    bloomPass.threshold = 0; bloomPass.strength = 1.2; bloomPass.radius = 0.5;
 
     const composer = new EffectComposer(renderer);
-    composer.addPass(renderScene);
-    composer.addPass(bloomPass);
+    composer.addPass(renderScene); composer.addPass(bloomPass);
 
     const clock = new THREE.Clock();
     let heartVisible = false;
@@ -157,21 +187,21 @@
         requestAnimationFrame(animate);
         const time = clock.getElapsedTime();
         
-        // Animasi Bintang berputar pelan
         starField.rotation.y = time * 0.05;
 
-        // Animasi Hati Berdetak
+        // Animasi Hati Berdetak dan Melayang
         if (heartVisible) {
-            const pulse = 0.4 + Math.sin(time * 4) * 0.02; // Berdetak
+            const pulse = 0.4 + Math.sin(time * 4) * 0.02;
             heartMesh.scale.lerp(new THREE.Vector3(pulse, pulse, pulse), 0.1);
-            heartMesh.position.y = Math.sin(time * 2) * 0.4; // Melayang
+            heartMesh.position.y = Math.sin(time * 2) * 0.4;
         }
         
         controls.update(); 
-        composer.render(); // Gunakan composer, bukan renderer biasa
+        composer.render(); 
     }
     animate();
 
+    // Responsif saat ukuran layar berubah
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -180,7 +210,7 @@
     });
 
     // ==========================================
-    // 2. LOGIK STORYTELLING & INTERAKSI
+    // 2. LOGIK STORYTELLING & INTERAKSI UI
     // ==========================================
     const storyLines = [
       "Di antara miliaran manusia di bumi...",
@@ -199,44 +229,40 @@
       startScreen.style.opacity = '0';
       setTimeout(() => startScreen.style.display = 'none', 1000);
       
-      // Putar lagu
-      document.getElementById('bgm').play().catch(e => console.log("Audio autoplay dicegah"));
+      // Putar musik secara otomatis
+      const bgm = document.getElementById('bgm');
+      bgm.volume = 0.8;
+      bgm.play().catch(e => console.log("Audio play error:", e));
 
-      // Mulai Storyline (GSAP Timeline)
+      // Jalankan Animasi Teks Cerita
       const tl = gsap.timeline();
-      
-      storyLines.forEach((line, index) => {
+      storyLines.forEach((line) => {
         tl.call(() => { storyText.innerText = line; })
           .to(storyText, { opacity: 1, duration: 1.5, ease: "power2.inOut" })
           .to(storyText, { opacity: 0, duration: 1.5, ease: "power2.inOut", delay: 1.5 });
       });
 
-      // Setelah cerita selesai, munculkan hati dan pertanyaan
+      // Munculkan Hati 3D dan Kotak Pertanyaan
       tl.call(() => {
-        heartVisible = true; // Trigger animasi membesar & berdetak di fungsi animate()
-        // Pindahkan kamera mendekat secara sinematik
+        heartVisible = true; 
         gsap.to(camera.position, { z: 10, duration: 3, ease: "power3.inOut" });
-        
-        // Munculkan Card Pertanyaan
         questionBox.style.display = 'block';
         gsap.to(questionBox, { opacity: 1, y: 0, duration: 1, ease: "back.out(1.2)", delay: 1 });
       });
     });
 
-    // Tombol Lari-larian
+    // Logika Tombol "Enggak" Lari-larian
     const noBtn = document.getElementById('btn-no');
     const moveBtn = () => {
-      const cardRect = questionBox.getBoundingClientRect();
-      const x = (Math.random() - 0.5) * 300; // Kabur ke kanan/kiri acak
-      const y = (Math.random() - 0.5) * 300; // Kabur ke atas/bawah acak
+      const x = (Math.random() - 0.5) * 300; 
+      const y = (Math.random() - 0.5) * 300; 
       gsap.to(noBtn, { x: x, y: y, duration: 0.3, ease: "power2.out" });
     };
     noBtn.addEventListener('mouseover', moveBtn);
     noBtn.addEventListener('touchstart', moveBtn);
 
-    // Tombol Iya
+    // Logika Tombol "Iya"
     document.getElementById('btn-yes').addEventListener('click', () => {
-      // Hati bersinar lebih terang
       bloomPass.strength = 2.5;
       pointLight.color.setHex(0xffffff);
       heartMesh.material.emissive.setHex(0xff0040);
@@ -248,7 +274,9 @@
       }});
     });
 
-    // Kirim Telegram
+    // ==========================================
+    // 3. INTEGRASI BOT TELEGRAM
+    // ==========================================
     document.getElementById('btn-send').addEventListener('click', () => {
       const msg = document.getElementById('reply-msg').value;
       if(msg.trim() === "") return alert("Isi pesannya dulu dong sayang...");
@@ -256,11 +284,12 @@
       const btnSend = document.getElementById('btn-send');
       btnSend.innerText = "Menerbangkan pesan...";
 
-      // === SETUP TELEGRAM DI SINI ===
+      // 👇 GANTI TOKEN DAN CHAT ID DI BAWAH INI 👇
       const botToken = "8303109998:AAGOsoAvit6hCAjpSmjBeeCIj2MManPdgWM"; 
       const chatId = "5552266500";
-      const text = `💌 PESAN CINTA DARI DOI:\n\n"${msg}"`;
+      // 👆 GANTI TOKEN DAN CHAT ID DI ATAS INI 👆
 
+      const text = `💌 PESAN CINTA DARI DOI:\n\n"${msg}"`;
       const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`;
 
       fetch(url)
@@ -270,10 +299,14 @@
             btnSend.innerText = "Pesan Terkirim! Love You! ❤️";
             btnSend.style.background = "#ff2a6d";
             document.getElementById('reply-msg').disabled = true;
-          } else { alert("Gagal kirim, pastikan Token & ID benar."); btnSend.innerText = "Kirim Pesan 💌"; }
+          } else { 
+            alert("Oops, gagal terkirim. Pastikan Token & ID Telegram sudah benar."); 
+            btnSend.innerText = "Kirim Pesan 💌"; 
+          }
         })
         .catch(err => {
-          alert("Gagal kirim karena internet."); btnSend.innerText = "Kirim Pesan 💌";
+          alert("Gagal kirim. Coba cek koneksi internetmu."); 
+          btnSend.innerText = "Kirim Pesan 💌";
         });
     });
   </script>
