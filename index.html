@@ -35,15 +35,15 @@
       opacity: 0; font-weight: 300; font-style: italic; 
     }
 
-    /* Kotak Interaksi (Bisa di-scroll kalau layar HP kecil) */
+    /* Kotak Interaksi (Scrollable) */
     .glass-card { 
       background: rgba(20, 0, 10, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
       border: 1px solid rgba(255, 42, 109, 0.3); padding: 30px; border-radius: 20px; 
       box-shadow: 0 0 40px rgba(255, 42, 109, 0.2); pointer-events: auto; 
       display: none; opacity: 0; transform: translateY(20px); max-width: 90%; width: 400px;
-      max-height: 85vh; overflow-y: auto; 
+      max-height: 85vh; overflow-y: auto; /* Agar bisa discroll di HP kecil */
     }
-    .glass-card::-webkit-scrollbar { display: none; } /* Sembunyikan scrollbar agar estetik */
+    .glass-card::-webkit-scrollbar { display: none; }
     
     .btn { 
       padding: 12px 20px; margin: 5px; font-size: 1rem; font-weight: bold; 
@@ -62,13 +62,24 @@
     
     #btn-send { background: linear-gradient(45deg, #00e676, #00b35c); color: white; box-shadow: 0 0 20px rgba(0,230,118,0.4); }
     #btn-record { background: linear-gradient(45deg, #ff9a44, #fc6076); color: white; box-shadow: 0 0 20px rgba(252,96,118,0.4); }
-    
     .recording { animation: blink 1s infinite; background: #ff0000 !important; box-shadow: 0 0 30px red !important; }
     
     /* Area Kanvas Doodle */
     .doodle-area { margin-top: 15px; text-align: left; }
-    canvas { border: 2px dashed #ff2a6d; border-radius: 12px; background: rgba(0,0,0,0.5); width: 100%; height: 150px; touch-action: none; cursor: crosshair; }
+    canvas#drawing-pad { border: 2px dashed #ff2a6d; border-radius: 12px; background: rgba(0,0,0,0.5); width: 100%; height: 150px; touch-action: none; cursor: crosshair; }
     .canvas-btns { display: flex; gap: 10px; margin-top: 5px; }
+
+    /* Area Kamera Selfie */
+    .camera-area { margin-top: 15px; text-align: left; }
+    .video-container {
+        width: 100%; height: 250px; background: rgba(0,0,0,0.5);
+        border: 2px solid #ff2a6d; border-radius: 12px; overflow: hidden;
+        display: flex; justify-content: center; align-items: center; position: relative;
+    }
+    /* Efek mirror agar seperti ngaca */
+    #camera-stream { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); } 
+    .camera-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; justify-content: center; }
+    #post-take-btns { display: flex; width: 100%; gap: 5px; }
 
     @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.5; transform: scale(0.95); } }
     @keyframes blink { 50% { opacity: 0.5; } }
@@ -113,6 +124,7 @@
 
     <div id="reply-box" class="glass-card">
       <h2 style="margin-top:0; color: #00e676;">Aku juga sayang kamu! 💕</h2>
+      
       <p style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 5px;">Kirim pesan atau suara buat aku:</p>
       <textarea id="reply-msg" rows="2" placeholder="Ketik sesuatu dari hati..."></textarea>
       <button id="btn-send" class="btn">Kirim Pesan Teks 💌</button>
@@ -128,6 +140,26 @@
           <button id="btn-send-draw" class="btn" style="flex: 2; background: linear-gradient(45deg, #9d50bb, #6e48aa); color: white;">Kirim Gambar 🎨</button>
         </div>
       </div>
+
+      <hr style="border: 1px solid rgba(255,42,109,0.2); margin: 20px 0;">
+
+      <div class="camera-area">
+        <p style="font-size: 0.9rem; opacity: 0.8; margin: 0 0 5px 0;">Kirim selfie dong (Tenang, filternya cakep):</p>
+        <div class="video-container">
+            <video id="camera-stream" autoplay playsinline></video>
+            <canvas id="photo-canvas" style="display:none;"></canvas>
+        </div>
+        <div class="camera-btns">
+          <button id="btn-start-cam" class="btn" style="background: linear-gradient(45deg, #ff00cc, #333399); color: white;">📸 Buka Kamera</button>
+          <button id="btn-take-photo" class="btn" style="display:none; background: linear-gradient(45deg, #ff2a6d, #ff7b9c); color: white;">Jepret! 💥</button>
+          
+          <div id="post-take-btns" style="display:none;">
+            <button id="btn-retake" class="btn" style="flex:1; background: #444; color: white;">Ulang</button>
+            <button id="btn-send-photo" class="btn" style="flex:2; background: linear-gradient(45deg, #00e676, #00b35c); color: white;">Kirim Foto 📤</button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -204,17 +236,13 @@
     function animate() {
         requestAnimationFrame(animate);
         const time = clock.getElapsedTime();
-        
         starField.rotation.y += 0.001; 
-
         if (heartVisible) {
             const pulse = 0.4 + Math.sin(time * 4) * 0.02;
             heartMesh.scale.lerp(new THREE.Vector3(pulse, pulse, pulse), 0.1);
             heartMesh.position.y = Math.sin(time * 2) * 0.4;
         }
-        
-        controls.update(); 
-        composer.render(); 
+        controls.update(); composer.render(); 
     }
     animate();
 
@@ -236,46 +264,28 @@
         if(!heartVisible) return;
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
         raycaster.setFromCamera(mouse, camera);
         const intersects = raycaster.intersectObject(heartMesh);
-
         if (intersects.length > 0) {
             tapCount++;
             gsap.to(heartMesh.scale, { x: 0.5, y: 0.5, z: 0.5, duration: 0.1, yoyo: true, repeat: 1 });
-            
-            if(tapCount >= 10) {
-                tapCount = 0;
-                explodeHeart();
-            }
+            if(tapCount >= 10) { tapCount = 0; explodeHeart(); }
         }
     });
 
     function explodeHeart() {
         heartVisible = false;
         heartMesh.scale.set(0,0,0); 
-        
         for(let i=0; i<30; i++) {
             const miniHeart = new THREE.Mesh(geometry, material.clone());
-            miniHeart.scale.set(0.05, 0.05, 0.05);
-            miniHeart.rotation.x = Math.PI;
-            scene.add(miniHeart);
-            
-            const angle = Math.random() * Math.PI * 2;
-            const radius = Math.random() * 8 + 2;
-            const targetX = Math.cos(angle) * radius;
-            const targetY = Math.sin(angle) * radius + (Math.random()*5);
-            const targetZ = (Math.random() - 0.5) * 8;
-
+            miniHeart.scale.set(0.05, 0.05, 0.05); miniHeart.rotation.x = Math.PI; scene.add(miniHeart);
+            const angle = Math.random() * Math.PI * 2; const radius = Math.random() * 8 + 2;
+            const targetX = Math.cos(angle) * radius; const targetY = Math.sin(angle) * radius + (Math.random()*5); const targetZ = (Math.random() - 0.5) * 8;
             gsap.to(miniHeart.position, { x: targetX, y: targetY, z: targetZ, duration: 1.5, ease: "power3.out" });
             gsap.to(miniHeart.rotation, { x: Math.random()*Math.PI*4, y: Math.random()*Math.PI*4, duration: 1.5 });
             gsap.to(miniHeart.material, { opacity: 0, transparent: true, duration: 1, delay: 1, onComplete: () => scene.remove(miniHeart) });
         }
-
-        setTimeout(() => {
-            heartVisible = true;
-            gsap.to(heartMesh.scale, { x: 0.4, y: 0.4, z: 0.4, duration: 1, ease: "elastic.out(1, 0.5)" });
-        }, 2500);
+        setTimeout(() => { heartVisible = true; gsap.to(heartMesh.scale, { x: 0.4, y: 0.4, z: 0.4, duration: 1, ease: "elastic.out(1, 0.5)" }); }, 2500);
     }
 
     // ==========================================
@@ -302,10 +312,8 @@
     startScreen.addEventListener('click', () => {
       startScreen.style.opacity = '0';
       setTimeout(() => startScreen.style.display = 'none', 1000);
-      
       const bgm = document.getElementById('bgm');
-      bgm.volume = 0; 
-      bgm.play().catch(e => console.log("Audio error:", e));
+      bgm.volume = 0; bgm.play().catch(e => console.log("Audio error:", e));
       gsap.to(bgm, { volume: 0.8, duration: 4 }); 
 
       const tl = gsap.timeline();
@@ -314,7 +322,6 @@
           .to(storyText, { opacity: 1, duration: 1.5, ease: "power2.inOut" })
           .to(storyText, { opacity: 0, duration: 1.5, ease: "power2.inOut", delay: 1.5 });
       });
-
       tl.call(() => {
         heartVisible = true; 
         gsap.to(camera.position, { z: 10, duration: 3, ease: "power3.inOut" });
@@ -323,85 +330,60 @@
       });
     });
 
-    // -- JEBAKAN TOMBOL "ENGGAK" --
+    // JEBAKAN TOMBOL "ENGGAK"
     const noBtn = document.getElementById('btn-no');
-    
-    // Bikin Lari-larian
     const moveBtn = () => {
-      const x = (Math.random() - 0.5) * 250; 
-      const y = (Math.random() - 0.5) * 250; 
+      const x = (Math.random() - 0.5) * 250; const y = (Math.random() - 0.5) * 250; 
       gsap.to(noBtn, { x: x, y: y, duration: 0.2, ease: "power2.out" });
     };
-    noBtn.addEventListener('mouseover', moveBtn);
-    noBtn.addEventListener('touchstart', moveBtn);
+    noBtn.addEventListener('mouseover', moveBtn); noBtn.addEventListener('touchstart', moveBtn);
 
-    // Kalau dia berhasil klik (Jebakan Aktif)
     noBtn.addEventListener('click', () => {
-      // 1. Kirim Laporan Rahasia ke Telegram
       const intelText = `🚨 LAPORAN INTEL:\nSi Kacung baru aja berhasil ngeklik tombol "ENGGAK"! Hadeh ngajak ribut nih bos.`;
       fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(intelText)}`);
-
-      // 2. Efek Layar Berkedip Merah
-      gsap.to("body", { backgroundColor: "#8b0000", duration: 0.1, yoyo: true, repeat: 5, onComplete: () => {
-          gsap.to("body", { backgroundColor: "#020202", duration: 0.5 });
-      }});
-
-      // 3. Peringatan di Layar
+      gsap.to("body", { backgroundColor: "#8b0000", duration: 0.1, yoyo: true, repeat: 5, onComplete: () => { gsap.to("body", { backgroundColor: "#020202", duration: 0.5 }); }});
       const warning = document.createElement('div');
       warning.innerHTML = "<h1 style='color:#ff2a6d; font-size:3rem; text-shadow:0 0 30px #ff2a6d;'>Hayo... ketahuan mau mencet Enggak! 😡</h1>";
       warning.style.position = 'absolute'; warning.style.top = '30%'; warning.style.width = '100%'; 
       warning.style.textAlign = 'center'; warning.style.zIndex = '9999'; warning.style.pointerEvents = 'none';
       document.body.appendChild(warning);
-
       gsap.from(warning, {scale: 0, opacity: 0, duration: 0.5, ease: "back.out(2)"});
       gsap.to(warning, {opacity: 0, duration: 0.5, delay: 2.5, onComplete: () => warning.remove()});
-
-      // 4. Sembunyikan tombol "Enggak"
       noBtn.style.display = 'none';
     });
 
-    // -- TOMBOL "IYA" --
+    // TOMBOL "IYA"
     document.getElementById('btn-yes').addEventListener('click', () => {
-      bloomPass.strength = 2.5;
-      pointLight.color.setHex(0xffffff);
-      heartMesh.material.emissive.setHex(0xff0040);
-
+      bloomPass.strength = 2.5; pointLight.color.setHex(0xffffff); heartMesh.material.emissive.setHex(0xff0040);
       gsap.to(starField.scale, { z: 50, duration: 1, yoyo: true, repeat: 1, ease: "power2.inOut" });
       gsap.to(starField.rotation, { y: starField.rotation.y + Math.PI * 2, duration: 2, ease: "power2.inOut" });
-      
       confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff2a6d', '#ff7b9c', '#ffffff'], zIndex: 9999 });
-      
       gsap.to(questionBox, { opacity: 0, y: -20, duration: 0.5, onComplete: () => {
-        questionBox.style.display = 'none';
-        replyBox.style.display = 'block';
+        questionBox.style.display = 'none'; replyBox.style.display = 'block';
         gsap.to(replyBox, { opacity: 1, y: 0, duration: 0.8, ease: "back.out(1.5)", delay: 0.5 });
       }});
     });
 
     // ==========================================
-    // 5. MENGIRIM PESAN TEKS & SUARA
+    // 5. KIRIM TEKS, SUARA, DOODLE, & KAMERA
     // ==========================================
     
-    // Kirim Teks
+    // --- KIRIM TEKS ---
     document.getElementById('btn-send').addEventListener('click', () => {
       const msg = document.getElementById('reply-msg').value;
       if(msg.trim() === "") return alert("Isi pesannya dulu dong kacung...");
-      const btnSend = document.getElementById('btn-send');
-      btnSend.innerText = "Menerbangkan pesan...";
-
+      const btnSend = document.getElementById('btn-send'); btnSend.innerText = "Menerbangkan pesan...";
       const text = `💌 PESAN TEKS DARI KACUNG:\n\n"${msg}"`;
       fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`)
         .then(res => res.json()).then(data => {
-          if(data.ok) {
-            btnSend.innerText = "Teks Terkirim! ❤️"; btnSend.style.background = "#ff2a6d"; document.getElementById('reply-msg').disabled = true;
-          } else { alert("Gagal kirim teks."); btnSend.innerText = "Kirim Pesan Teks 💌"; }
+          if(data.ok) { btnSend.innerText = "Teks Terkirim! ❤️"; btnSend.style.background = "#ff2a6d"; document.getElementById('reply-msg').disabled = true; } 
+          else { alert("Gagal kirim teks."); btnSend.innerText = "Kirim Pesan Teks 💌"; }
         }).catch(err => { alert("Error koneksi."); btnSend.innerText = "Kirim Pesan Teks 💌"; });
     });
 
-    // Kirim Suara
+    // --- KIRIM SUARA ---
     let mediaRecorder; let audioChunks = []; let isRecording = false;
     const btnRecord = document.getElementById('btn-record');
-
     btnRecord.addEventListener('click', async () => {
       if (!isRecording) {
         try {
@@ -409,30 +391,17 @@
           mediaRecorder = new MediaRecorder(stream);
           mediaRecorder.ondataavailable = event => { audioChunks.push(event.data); };
           mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            audioChunks = [];
-            sendVoiceToTelegram(audioBlob);
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); audioChunks = []; sendVoiceToTelegram(audioBlob);
           };
-          mediaRecorder.start();
-          isRecording = true;
-          btnRecord.innerText = "🛑 Hentikan & Kirim Suara";
-          btnRecord.classList.add('recording');
+          mediaRecorder.start(); isRecording = true; btnRecord.innerText = "🛑 Hentikan & Kirim Suara"; btnRecord.classList.add('recording');
         } catch (err) { alert("Izinkan akses mikrofon dulu ya di browsernya!"); }
       } else {
-        mediaRecorder.stop();
-        isRecording = false;
-        btnRecord.innerText = "Menerbangkan suara...";
-        btnRecord.classList.remove('recording');
+        mediaRecorder.stop(); isRecording = false; btnRecord.innerText = "Menerbangkan suara..."; btnRecord.classList.remove('recording');
         mediaRecorder.stream.getTracks().forEach(t => t.stop());
       }
     });
-
     function sendVoiceToTelegram(audioBlob) {
-      const formData = new FormData();
-      formData.append('chat_id', chatId);
-      formData.append('document', audioBlob, 'Suara_Kacung.webm'); 
-      formData.append('caption', '🎤 Ada pesan suara masuk dari Kacung!');
-
+      const formData = new FormData(); formData.append('chat_id', chatId); formData.append('document', audioBlob, 'Suara_Kacung.webm'); formData.append('caption', '🎤 Ada pesan suara masuk dari Kacung!');
       fetch(`https://api.telegram.org/bot${botToken}/sendDocument`, { method: 'POST', body: formData })
       .then(res => res.json()).then(data => {
         if(data.ok) { btnRecord.innerText = "🎤 Suara Terkirim! ❤️"; btnRecord.style.background = "#ff2a6d"; btnRecord.disabled = true; } 
@@ -440,77 +409,65 @@
       }).catch(err => { alert("Koneksi error saat kirim suara."); btnRecord.innerText = "🎤 Coba Rekam Lagi"; });
     }
 
-    // ==========================================
-    // 6. FITUR CORETAN (CANVAS DOODLE)
-    // ==========================================
-    const canvas = document.getElementById('drawing-pad');
-    const ctx = canvas.getContext('2d');
-    let isDrawing = false;
-
-    // Latar belakang agak gelap biar kalau dikirim warnanya ngga transparan 
-    ctx.fillStyle = "#1a000a"; 
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+    // --- KIRIM DOODLE ---
+    const canvas = document.getElementById('drawing-pad'); const ctx = canvas.getContext('2d'); let isDrawing = false;
+    ctx.fillStyle = "#1a000a"; ctx.fillRect(0, 0, canvas.width, canvas.height);
     function getMousePos(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      return {
-        x: (clientX - rect.left) * (canvas.width / rect.width),
-        y: (clientY - rect.top) * (canvas.height / rect.height)
-      };
+      const rect = canvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
     }
-
-    function startDraw(e) {
-      isDrawing = true; const pos = getMousePos(e);
-      ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
-      e.preventDefault(); // Mencegah layar scroll pas lagi nggambar di HP
-    }
-
-    function draw(e) {
-      if (!isDrawing) return;
-      const pos = getMousePos(e);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.strokeStyle = "#ff2a6d"; // Warna tinta
-      ctx.lineWidth = 4;
-      ctx.lineCap = "round";
-      ctx.stroke();
-      e.preventDefault();
-    }
-
+    function startDraw(e) { isDrawing = true; const pos = getMousePos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); e.preventDefault(); }
+    function draw(e) { if (!isDrawing) return; const pos = getMousePos(e); ctx.lineTo(pos.x, pos.y); ctx.strokeStyle = "#ff2a6d"; ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.stroke(); e.preventDefault(); }
     function stopDraw() { isDrawing = false; ctx.closePath(); }
-
-    canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDraw);
-    canvas.addEventListener('mouseleave', stopDraw);
-    canvas.addEventListener('touchstart', startDraw, {passive: false});
-    canvas.addEventListener('touchmove', draw, {passive: false});
-    canvas.addEventListener('touchend', stopDraw);
-
-    // Tombol Hapus Kanvas
-    document.getElementById('btn-clear-draw').addEventListener('click', () => {
-      ctx.fillStyle = "#1a000a";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', stopDraw); canvas.addEventListener('mouseleave', stopDraw);
+    canvas.addEventListener('touchstart', startDraw, {passive: false}); canvas.addEventListener('touchmove', draw, {passive: false}); canvas.addEventListener('touchend', stopDraw);
+    document.getElementById('btn-clear-draw').addEventListener('click', () => { ctx.fillStyle = "#1a000a"; ctx.fillRect(0, 0, canvas.width, canvas.height); });
+    document.getElementById('btn-send-draw').addEventListener('click', () => {
+      const btn = document.getElementById('btn-send-draw'); btn.innerText = "Mengirim...";
+      canvas.toBlob((blob) => {
+        const formData = new FormData(); formData.append('chat_id', chatId); formData.append('photo', blob, 'doodle.png'); formData.append('caption', '🎨 Coretan spesial dari Kacung!');
+        fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData })
+        .then(res => res.json()).then(data => { if(data.ok) { btn.innerText = "Gambar Terkirim! 🎨"; btn.style.background = "#ff2a6d"; btn.disabled = true; } else { alert("Gagal kirim gambar."); btn.innerText = "Kirim Gambar 🎨"; }})
+        .catch(err => { alert("Error koneksi saat kirim gambar."); btn.innerText = "Kirim Gambar 🎨"; });
+      }, 'image/png');
     });
 
-    // Tombol Kirim Kanvas ke Telegram
-    document.getElementById('btn-send-draw').addEventListener('click', () => {
-      const btn = document.getElementById('btn-send-draw');
-      btn.innerText = "Mengirim...";
+    // --- KIRIM FOTO KAMERA (NEW!) ---
+    const videoEl = document.getElementById('camera-stream');
+    const photoCanvas = document.getElementById('photo-canvas'); const photoCtx = photoCanvas.getContext('2d'); let streamObj = null;
+    
+    document.getElementById('btn-start-cam').addEventListener('click', async () => {
+      try {
+        streamObj = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }); // Pakai kamera depan
+        videoEl.srcObject = streamObj;
+        document.getElementById('btn-start-cam').style.display = 'none'; document.getElementById('btn-take-photo').style.display = 'inline-block';
+      } catch (err) { alert("Gagal akses kamera. Izinkan dulu ya!"); }
+    });
 
-      canvas.toBlob((blob) => {
-        const formData = new FormData();
-        formData.append('chat_id', chatId);
-        formData.append('photo', blob, 'doodle.png');
-        formData.append('caption', '🎨 Coretan spesial dari Kacung!');
+    document.getElementById('btn-take-photo').addEventListener('click', () => {
+      photoCanvas.width = videoEl.videoWidth; photoCanvas.height = videoEl.videoHeight;
+      photoCtx.translate(photoCanvas.width, 0); photoCtx.scale(-1, 1); // Mirror hasil foto
+      photoCtx.drawImage(videoEl, 0, 0, photoCanvas.width, photoCanvas.height);
+      videoEl.pause();
+      document.getElementById('btn-take-photo').style.display = 'none'; document.getElementById('post-take-btns').style.display = 'flex';
+    });
 
+    document.getElementById('btn-retake').addEventListener('click', () => {
+      videoEl.play();
+      document.getElementById('post-take-btns').style.display = 'none'; document.getElementById('btn-take-photo').style.display = 'inline-block';
+    });
+
+    document.getElementById('btn-send-photo').addEventListener('click', () => {
+      const btn = document.getElementById('btn-send-photo'); btn.innerText = "Mengirim...";
+      photoCanvas.toBlob((blob) => {
+        const formData = new FormData(); formData.append('chat_id', chatId); formData.append('photo', blob, 'selfie.png'); formData.append('caption', '📸 Kacung ngirim pap selfie nih!');
         fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: 'POST', body: formData })
         .then(res => res.json()).then(data => {
-          if(data.ok) {
-            btn.innerText = "Gambar Terkirim! 🎨"; btn.style.background = "#ff2a6d"; btn.disabled = true;
-          } else { alert("Gagal kirim gambar."); btn.innerText = "Kirim Gambar 🎨"; }
-        }).catch(err => { alert("Error koneksi saat kirim gambar."); btn.innerText = "Kirim Gambar 🎨"; });
+          if(data.ok) { 
+            btn.innerText = "Foto Terkirim! 📸"; btn.style.background = "#ff2a6d"; btn.disabled = true; document.getElementById('btn-retake').style.display = 'none';
+            if(streamObj) streamObj.getTracks().forEach(track => track.stop()); // Matikan kamera
+          } else { alert("Gagal kirim foto."); btn.innerText = "Kirim Foto 📤"; }
+        }).catch(err => { alert("Error koneksi saat kirim foto."); btn.innerText = "Kirim Foto 📤"; });
       }, 'image/png');
     });
 
