@@ -35,13 +35,12 @@
       opacity: 0; font-weight: 300; font-style: italic; 
     }
 
-    /* Kotak Interaksi (Scrollable) */
     .glass-card { 
       background: rgba(20, 0, 10, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
       border: 1px solid rgba(255, 42, 109, 0.3); padding: 30px; border-radius: 20px; 
       box-shadow: 0 0 40px rgba(255, 42, 109, 0.2); pointer-events: auto; 
       display: none; opacity: 0; transform: translateY(20px); max-width: 90%; width: 400px;
-      max-height: 85vh; overflow-y: auto; /* Agar bisa discroll di HP kecil */
+      max-height: 85vh; overflow-y: auto; 
     }
     .glass-card::-webkit-scrollbar { display: none; }
     
@@ -64,19 +63,12 @@
     #btn-record { background: linear-gradient(45deg, #ff9a44, #fc6076); color: white; box-shadow: 0 0 20px rgba(252,96,118,0.4); }
     .recording { animation: blink 1s infinite; background: #ff0000 !important; box-shadow: 0 0 30px red !important; }
     
-    /* Area Kanvas Doodle */
     .doodle-area { margin-top: 15px; text-align: left; }
     canvas#drawing-pad { border: 2px dashed #ff2a6d; border-radius: 12px; background: rgba(0,0,0,0.5); width: 100%; height: 150px; touch-action: none; cursor: crosshair; }
     .canvas-btns { display: flex; gap: 10px; margin-top: 5px; }
 
-    /* Area Kamera Selfie */
     .camera-area { margin-top: 15px; text-align: left; }
-    .video-container {
-        width: 100%; height: 250px; background: rgba(0,0,0,0.5);
-        border: 2px solid #ff2a6d; border-radius: 12px; overflow: hidden;
-        display: flex; justify-content: center; align-items: center; position: relative;
-    }
-    /* Efek mirror agar seperti ngaca */
+    .video-container { width: 100%; height: 250px; background: rgba(0,0,0,0.5); border: 2px solid #ff2a6d; border-radius: 12px; overflow: hidden; display: flex; justify-content: center; align-items: center; position: relative; }
     #camera-stream { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); } 
     .camera-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; justify-content: center; }
     #post-take-btns { display: flex; width: 100%; gap: 5px; }
@@ -100,7 +92,6 @@
 <body>
 
   <audio id="bgm" src="music.mp3" loop></audio>
-
   <div id="canvas-container"></div>
   
   <div id="start-screen" class="ui-layer">
@@ -112,7 +103,6 @@
   </div>
 
   <div id="interaction-layer" class="ui-layer">
-    
     <div id="question-box" class="glass-card">
       <h2 style="margin-top:0; color: #ff8eac;">Hai, Kacung...</h2>
       <p style="font-size: 1.2rem; margin-bottom: 30px;">Setelah semua ini, kamu masih sayang banget kan sama aku?</p>
@@ -152,16 +142,13 @@
         <div class="camera-btns">
           <button id="btn-start-cam" class="btn" style="background: linear-gradient(45deg, #ff00cc, #333399); color: white;">📸 Buka Kamera</button>
           <button id="btn-take-photo" class="btn" style="display:none; background: linear-gradient(45deg, #ff2a6d, #ff7b9c); color: white;">Jepret! 💥</button>
-          
           <div id="post-take-btns" style="display:none;">
             <button id="btn-retake" class="btn" style="flex:1; background: #444; color: white;">Ulang</button>
             <button id="btn-send-photo" class="btn" style="flex:2; background: linear-gradient(45deg, #00e676, #00b35c); color: white;">Kirim Foto 📤</button>
           </div>
         </div>
       </div>
-
     </div>
-
   </div>
 
   <script type="module">
@@ -195,6 +182,10 @@
     pointLight.position.set(0, 0, 5);
     scene.add(pointLight);
 
+    // Bikin GRUP khusus untuk Parallax biar gak tabrakan sama OrbitControls
+    const sceneGroup = new THREE.Group();
+    scene.add(sceneGroup);
+
     const starsGeo = new THREE.BufferGeometry();
     const starsVert = [];
     for(let i=0; i<4000; i++) {
@@ -203,7 +194,7 @@
     starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starsVert, 3));
     const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.8 });
     const starField = new THREE.Points(starsGeo, starsMat);
-    scene.add(starField);
+    sceneGroup.add(starField);
 
     const heartShape = new THREE.Shape();
     const x = 0, y = 0;
@@ -221,7 +212,7 @@
     const heartMesh = new THREE.Mesh(geometry, material);
     heartMesh.rotation.x = Math.PI;
     heartMesh.scale.set(0, 0, 0); 
-    scene.add(heartMesh);
+    sceneGroup.add(heartMesh);
 
     const renderScene = new RenderPass(scene, camera);
     const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
@@ -230,12 +221,52 @@
     const composer = new EffectComposer(renderer);
     composer.addPass(renderScene); composer.addPass(bloomPass);
 
+    // ==========================================
+    // VARIABEL & FUNGSI GYROSCOPE (PARALLAX)
+    // ==========================================
+    let gyroX = 0; let gyroY = 0;
+    
+    // Untuk PC / Mouse
+    document.addEventListener('mousemove', (e) => {
+      gyroX = (e.clientX / window.innerWidth - 0.5) * 1.5;
+      gyroY = (e.clientY / window.innerHeight - 0.5) * 1.5;
+    });
+
+    // Untuk Mobile / Sensor HP (Dipanggil saat Tap to Start)
+    function setupGyroscope() {
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission().then(state => {
+          if (state === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation);
+          }
+        }).catch(console.error);
+      } else {
+        window.addEventListener('deviceorientation', handleOrientation);
+      }
+    }
+
+    function handleOrientation(e) {
+      let gamma = e.gamma || 0; let beta = e.beta || 0;
+      if(gamma > 45) gamma = 45; if(gamma < -45) gamma = -45;
+      if(beta > 80) beta = 80; if(beta < 10) beta = 10;
+      gyroX = gamma / 45; // Kiri Kanan
+      gyroY = (beta - 45) / 35; // Atas Bawah
+    }
+
+    // ==========================================
+    // LOOP ANIMASI
+    // ==========================================
     const clock = new THREE.Clock();
     let heartVisible = false;
 
     function animate() {
         requestAnimationFrame(animate);
         const time = clock.getElapsedTime();
+        
+        // Efek Parallax Halus (Scene Group bergeser mengikuti gyroX/gyroY)
+        sceneGroup.rotation.y += (gyroX * 0.5 - sceneGroup.rotation.y) * 0.05;
+        sceneGroup.rotation.x += (gyroY * 0.5 - sceneGroup.rotation.x) * 0.05;
+
         starField.rotation.y += 0.001; 
         if (heartVisible) {
             const pulse = 0.4 + Math.sin(time * 4) * 0.02;
@@ -254,7 +285,7 @@
     });
 
     // ==========================================
-    // 2. FITUR RAHASIA (EASTER EGG) - KLIK HATI
+    // FITUR RAHASIA (EASTER EGG) - KLIK HATI
     // ==========================================
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
@@ -265,6 +296,8 @@
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
+        
+        // Cek klik pada sceneGroup (karena heartMesh ada di dalam sceneGroup)
         const intersects = raycaster.intersectObject(heartMesh);
         if (intersects.length > 0) {
             tapCount++;
@@ -274,28 +307,27 @@
     });
 
     function explodeHeart() {
-        heartVisible = false;
-        heartMesh.scale.set(0,0,0); 
+        heartVisible = false; heartMesh.scale.set(0,0,0); 
         for(let i=0; i<30; i++) {
             const miniHeart = new THREE.Mesh(geometry, material.clone());
-            miniHeart.scale.set(0.05, 0.05, 0.05); miniHeart.rotation.x = Math.PI; scene.add(miniHeart);
+            miniHeart.scale.set(0.05, 0.05, 0.05); miniHeart.rotation.x = Math.PI; sceneGroup.add(miniHeart);
             const angle = Math.random() * Math.PI * 2; const radius = Math.random() * 8 + 2;
             const targetX = Math.cos(angle) * radius; const targetY = Math.sin(angle) * radius + (Math.random()*5); const targetZ = (Math.random() - 0.5) * 8;
             gsap.to(miniHeart.position, { x: targetX, y: targetY, z: targetZ, duration: 1.5, ease: "power3.out" });
             gsap.to(miniHeart.rotation, { x: Math.random()*Math.PI*4, y: Math.random()*Math.PI*4, duration: 1.5 });
-            gsap.to(miniHeart.material, { opacity: 0, transparent: true, duration: 1, delay: 1, onComplete: () => scene.remove(miniHeart) });
+            gsap.to(miniHeart.material, { opacity: 0, transparent: true, duration: 1, delay: 1, onComplete: () => sceneGroup.remove(miniHeart) });
         }
         setTimeout(() => { heartVisible = true; gsap.to(heartMesh.scale, { x: 0.4, y: 0.4, z: 0.4, duration: 1, ease: "elastic.out(1, 0.5)" }); }, 2500);
     }
 
     // ==========================================
-    // 3. LOGIKA TELEGRAM API & DATA KAMU
+    // TELEGRAM API & DATA KAMU
     // ==========================================
     const botToken = "8303109998:AAGOsoAvit6hCAjpSmjBeeCIj2MManPdgWM"; 
     const chatId = "5552266500";
 
     // ==========================================
-    // 4. STORYTELLING & INTERAKSI (JEBAKAN INTEL)
+    // STORYTELLING & INTERAKSI
     // ==========================================
     const storyLines = [
       "Di antara miliaran manusia di bumi...",
@@ -312,6 +344,9 @@
     startScreen.addEventListener('click', () => {
       startScreen.style.opacity = '0';
       setTimeout(() => startScreen.style.display = 'none', 1000);
+      
+      setupGyroscope(); // Aktifkan Gyroscope Parallax
+      
       const bgm = document.getElementById('bgm');
       bgm.volume = 0; bgm.play().catch(e => console.log("Audio error:", e));
       gsap.to(bgm, { volume: 0.8, duration: 4 }); 
@@ -365,10 +400,9 @@
     });
 
     // ==========================================
-    // 5. KIRIM TEKS, SUARA, DOODLE, & KAMERA
+    // KIRIM TEKS, SUARA, DOODLE, & KAMERA
     // ==========================================
     
-    // --- KIRIM TEKS ---
     document.getElementById('btn-send').addEventListener('click', () => {
       const msg = document.getElementById('reply-msg').value;
       if(msg.trim() === "") return alert("Isi pesannya dulu dong kacung...");
@@ -381,7 +415,6 @@
         }).catch(err => { alert("Error koneksi."); btnSend.innerText = "Kirim Pesan Teks 💌"; });
     });
 
-    // --- KIRIM SUARA ---
     let mediaRecorder; let audioChunks = []; let isRecording = false;
     const btnRecord = document.getElementById('btn-record');
     btnRecord.addEventListener('click', async () => {
@@ -409,7 +442,6 @@
       }).catch(err => { alert("Koneksi error saat kirim suara."); btnRecord.innerText = "🎤 Coba Rekam Lagi"; });
     }
 
-    // --- KIRIM DOODLE ---
     const canvas = document.getElementById('drawing-pad'); const ctx = canvas.getContext('2d'); let isDrawing = false;
     ctx.fillStyle = "#1a000a"; ctx.fillRect(0, 0, canvas.width, canvas.height);
     function getMousePos(e) {
@@ -432,13 +464,12 @@
       }, 'image/png');
     });
 
-    // --- KIRIM FOTO KAMERA (NEW!) ---
     const videoEl = document.getElementById('camera-stream');
     const photoCanvas = document.getElementById('photo-canvas'); const photoCtx = photoCanvas.getContext('2d'); let streamObj = null;
     
     document.getElementById('btn-start-cam').addEventListener('click', async () => {
       try {
-        streamObj = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }); // Pakai kamera depan
+        streamObj = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
         videoEl.srcObject = streamObj;
         document.getElementById('btn-start-cam').style.display = 'none'; document.getElementById('btn-take-photo').style.display = 'inline-block';
       } catch (err) { alert("Gagal akses kamera. Izinkan dulu ya!"); }
@@ -446,7 +477,7 @@
 
     document.getElementById('btn-take-photo').addEventListener('click', () => {
       photoCanvas.width = videoEl.videoWidth; photoCanvas.height = videoEl.videoHeight;
-      photoCtx.translate(photoCanvas.width, 0); photoCtx.scale(-1, 1); // Mirror hasil foto
+      photoCtx.translate(photoCanvas.width, 0); photoCtx.scale(-1, 1); 
       photoCtx.drawImage(videoEl, 0, 0, photoCanvas.width, photoCanvas.height);
       videoEl.pause();
       document.getElementById('btn-take-photo').style.display = 'none'; document.getElementById('post-take-btns').style.display = 'flex';
@@ -465,7 +496,7 @@
         .then(res => res.json()).then(data => {
           if(data.ok) { 
             btn.innerText = "Foto Terkirim! 📸"; btn.style.background = "#ff2a6d"; btn.disabled = true; document.getElementById('btn-retake').style.display = 'none';
-            if(streamObj) streamObj.getTracks().forEach(track => track.stop()); // Matikan kamera
+            if(streamObj) streamObj.getTracks().forEach(track => track.stop());
           } else { alert("Gagal kirim foto."); btn.innerText = "Kirim Foto 📤"; }
         }).catch(err => { alert("Error koneksi saat kirim foto."); btn.innerText = "Kirim Foto 📤"; });
       }, 'image/png');
