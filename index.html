@@ -1,288 +1,180 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Special For You ❤️</title>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Poppins:wght@300&display=swap" rel="stylesheet">
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #05000a; /* Warna dasar hitam keunguan */
-            font-family: 'Poppins', sans-serif;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Untuk Kamu ❤️</title>
+  <style>
+    /* Styling dasar agar web full screen dan keren */
+    body { 
+      margin: 0; 
+      overflow: hidden; 
+      background-color: #050505; 
+      color: white; 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    }
+    #canvas-container { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 100vw; 
+      height: 100vh; 
+      z-index: 1; 
+    }
+    #text-overlay { 
+      position: absolute; 
+      top: 50%; 
+      left: 50%; 
+      transform: translate(-50%, -50%); 
+      text-align: center; 
+      z-index: 2; 
+      pointer-events: none; /* Agar mouse tetap bisa muter objek 3D di belakang teks */
+      width: 90%; 
+    }
+    h1 { 
+      font-size: 3.5rem; 
+      margin: 0; 
+      text-shadow: 0 0 20px #ff2a6d; 
+      opacity: 0; /* Disembunyikan dulu sebelum dianimasikan */
+      transform: scale(0.5);
+    }
+    p { 
+      font-size: 1.5rem; 
+      font-style: italic; 
+      font-weight: 300; 
+      text-shadow: 0 0 10px rgba(255,255,255,0.5); 
+      margin-top: 20px; 
+      opacity: 0; 
+      transform: translateY(20px);
+    }
+  </style>
 
-        #canvas-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            /* Vignette halus di pinggir layar */
-            background: radial-gradient(circle at center, transparent 50%, #000000 100%);
-        }
-
-        #overlay {
-            position: absolute;
-            top: 45%; /* Sedikit di atas tengah */
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-            color: #fff;
-            text-align: center;
-            pointer-events: none;
-            text-shadow: 0 2px 15px rgba(255, 105, 180, 0.7);
-            
-            /* Animasi Fade In saat dibuka */
-            opacity: 0;
-            animation: fadeIn 3s ease-out forwards 1s; /* Delay 1 detik baru muncul */
-        }
-
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-
-        #overlay h1 {
-            font-family: 'Dancing Script', cursive; /* Font tulisan tangan */
-            font-size: 4rem;
-            margin-bottom: 0.2rem;
-            color: #ffcce6; /* Pink pastel terang */
-            font-weight: 600;
-        }
-
-        #overlay p {
-            font-size: 1.1rem;
-            color: #e0e0e0;
-            letter-spacing: 1px;
-        }
-
-        .subtitle-small {
-            font-size: 0.85rem !important;
-            opacity: 0.6;
-            margin-top: 30px;
-        }
-    </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  
+  <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/"
+      }
+    }
+  </script>
 </head>
 <body>
 
-    <div id="overlay">
-        <h1>My Universe ❤️</h1>
-        <p>Setiap sudut duniaku isinya kamu...</p>
-        <p class="subtitle-small">(Putar layar untuk melihat keliling)</p>
-    </div>
+  <div id="canvas-container"></div>
+  
+  <div id="text-overlay">
+    <h1 id="title">Untuk Kamu...</h1>
+    <p id="quote">Memuat cinta...</p>
+  </div>
 
-    <div id="canvas-container"></div>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
+    // ==========================================
+    // 1. DATA GOMBALAN (Pengganti Backend)
+    // ==========================================
+    const quotes = [
+      "Aku nggak butuh Google, karena semua yang aku cari ada di kamu.",
+      "Dunia ini isinya 8 miliar orang, tapi mataku cuma fokus ke kamu.",
+      "Kamu itu kayak WiFi, bikin aku pengen connect terus.",
+      "Cintaku ke kamu itu kayak utang, makin hari makin numpuk.",
+      "Kalau disuruh melupakanmu, aku mau ke kelurahan dulu, minta surat keterangan tidak mampu."
+    ];
+    // Pilih kata-kata acak
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    document.getElementById('quote').innerText = `"${randomQuote}"`;
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { Reflector } from 'three/addons/objects/Reflector.js';
+    // ==========================================
+    // 2. ANIMASI TEKS 
+    // ==========================================
+    gsap.to("#title", { opacity: 1, scale: 1, duration: 1.5, ease: "back.out(1.7)" });
+    gsap.to("#quote", { opacity: 1, y: 0, duration: 1.5, delay: 1, ease: "power2.out" });
 
-        // --- SETUP SCENE & KAMERA ---
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        const bgColor = new THREE.Color(0x100520); // Ungu gelap dalam
-        scene.background = bgColor;
-        scene.fog = new THREE.FogExp2(bgColor, 0.035); // Kabut tebal dramatis
+    // ==========================================
+    // 3. SETUP 3D HEART & STARS (Three.js)
+    // ==========================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 12;
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 2, 11); // Posisi kamera agak jauh dan tinggi sedikit
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimasi performa
-        renderer.shadowMap.enabled = true; // Aktifkan bayangan
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        container.appendChild(renderer.domElement);
+    // Kontrol mouse (bisa diputar-putar)
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableZoom = false;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 2.0;
 
-        // --- KONTROL ORBIT ---
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.03;
-        controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.4; // Putaran sangat pelan dan halus
-        controls.maxDistance = 20;
-        controls.minDistance = 4;
-        controls.maxPolarAngle = Math.PI / 2 - 0.1; // Cegah kamera melihat ke bawah lantai
+    // Pencahayaan
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xff8eac, 2);
+    dirLight.position.set(10, 10, 5);
+    scene.add(dirLight);
 
-        // --- PENCAHAYAAN DRAMATIS (ROMANTIS) ---
-        // Cahaya ambient hangat
-        const hemiLight = new THREE.HemisphereLight(0xffcb8e, 0x080820, 0.3);
-        scene.add(hemiLight);
+    // Membuat Taburan Bintang
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+    const starsVertices = [];
+    for(let i = 0; i < 3000; i++) {
+        const x = THREE.MathUtils.randFloatSpread(100);
+        const y = THREE.MathUtils.randFloatSpread(100);
+        const z = THREE.MathUtils.randFloatSpread(100);
+        starsVertices.push(x, y, z);
+    }
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+    const starField = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(starField);
 
-        // Spotlight utama dari atas (warna pink/ungu)
-        const spotLight = new THREE.SpotLight(0xff80bf, 2.5);
-        spotLight.position.set(0, 15, 0);
-        spotLight.angle = Math.PI / 5;
-        spotLight.penumbra = 0.5;
-        spotLight.decay = 2;
-        spotLight.distance = 50;
-        spotLight.castShadow = true;
-        scene.add(spotLight);
-        scene.add(spotLight.target); // Target di tengah (0,0,0)
+    // Membuat Bentuk Hati 3D
+    const x = 0, y = 0;
+    const heartShape = new THREE.Shape();
+    heartShape.moveTo(x + 2.5, y + 2.5);
+    heartShape.bezierCurveTo(x + 2.5, y + 2.5, x + 2.0, y, x, y);
+    heartShape.bezierCurveTo(x - 3.0, y, x - 3.0, y + 3.5, x - 3.0, y + 3.5);
+    heartShape.bezierCurveTo(x - 3.0, y + 5.5, x - 1.0, y + 7.7, x + 2.5, y + 9.5);
+    heartShape.bezierCurveTo(x + 6.0, y + 7.7, x + 8.0, y + 5.5, x + 8.0, y + 3.5);
+    heartShape.bezierCurveTo(x + 8.0, y + 3.5, x + 8.0, y, x + 5.0, y);
+    heartShape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
 
-        // --- LANTAI REFLEKTIF (Cermin) ---
-        const floorGeometry = new THREE.PlaneGeometry(100, 100);
-        const floorMirror = new Reflector(floorGeometry, {
-            clipBias: 0.003,
-            textureWidth: window.innerWidth * window.devicePixelRatio,
-            textureHeight: window.innerHeight * window.devicePixelRatio,
-            color: 0x333333, // Warna dasar cermin agak gelap
-            recursion: 1
-        });
-        floorMirror.position.y = -2.5; // Posisi lantai di bawah
-        floorMirror.rotation.x = -Math.PI / 2; // Tidurkan lantai
-        scene.add(floorMirror);
+    const extrudeSettings = { depth: 2, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 1, bevelThickness: 1 };
+    const geometry = new THREE.ExtrudeGeometry(heartShape, extrudeSettings);
+    geometry.center(); // Pusatkan objek
+    
+    // Memberi warna dan tekstur metalik pada hati
+    const material = new THREE.MeshStandardMaterial({ color: 0xff2a6d, roughness: 0.2, metalness: 0.8 });
+    const heartMesh = new THREE.Mesh(geometry, material);
+    heartMesh.rotation.x = Math.PI; // Balikkan agar posisinya benar
+    heartMesh.scale.set(0.4, 0.4, 0.4);
+    scene.add(heartMesh);
 
-        // --- MEMUAT FOTO ---
-        const imageUrls = [
-            'https://files.catbox.moe/7imps1.jpg',
-            'https://files.catbox.moe/qcapl8.jpg',
-            'https://files.catbox.moe/mkkdhg.jpg',
-            'https://files.catbox.moe/n494od.jpg',
-            'https://files.catbox.moe/u4k0j9.jpg'
-        ];
-
-        const textureLoader = new THREE.TextureLoader();
-        const photoGroup = new THREE.Group();
-        scene.add(photoGroup);
-
-        const radius = 6.5; // Jarak lingkaran foto
-
-        imageUrls.forEach((url, i) => {
-            textureLoader.load(url, (texture) => {
-                texture.colorSpace = THREE.SRGBColorSpace;
-                // FIX FOTO TERBALIK: Pastikan orientasi texture benar
-                texture.flipY = false; 
-
-                const imgAspect = texture.image.width / texture.image.height;
-                
-                // Standarkan tinggi, biarkan lebar menyesuaikan aspek rasio
-                const baseHeight = 3.5;
-                let baseWidth = baseHeight * imgAspect;
-                // Batasi lebar maksimum agar tidak terlalu lebar
-                if(baseWidth > 5) baseWidth = 5;
-
-                const geometry = new THREE.PlaneGeometry(baseWidth, baseHeight);
-                
-                // Gunakan MeshStandardMaterial agar bereaksi dengan cahaya dramatis
-                const material = new THREE.MeshStandardMaterial({ 
-                    map: texture, 
-                    side: THREE.FrontSide, // Hanya render sisi depan
-                    roughness: 0.4,
-                    metalness: 0.1,
-                    emissive: 0x220011, // Sedikit glow ungu dari dalam foto
-                    emissiveIntensity: 0.3
-                });
-                
-                const photoMesh = new THREE.Mesh(geometry, material);
-                photoMesh.castShadow = true;
-
-                // Posisi melingkar
-                const angle = (i / imageUrls.length) * Math.PI * 2;
-                photoMesh.position.x = Math.sin(angle) * radius;
-                photoMesh.position.z = Math.cos(angle) * radius;
-                photoMesh.position.y = 1; // Tinggi posisi foto
-
-                // FIX ORIENTASI:
-                // Buat vector target di ketinggian yang sama dengan foto
-                const lookAtTarget = new THREE.Vector3(0, photoMesh.position.y, 0);
-                photoMesh.lookAt(lookAtTarget);
-
-                // Tambahkan bingkai putih tipis di belakang foto
-                const borderGeo = new THREE.PlaneGeometry(baseWidth + 0.1, baseHeight + 0.1);
-                const borderMat = new THREE.MeshBasicMaterial({color: 0xffffff});
-                const borderMesh = new THREE.Mesh(borderGeo, borderMat);
-                borderMesh.position.z = -0.01; // Geser sedikit ke belakang foto
-                photoMesh.add(borderMesh); // Tempelkan bingkai ke foto
-
-                photoGroup.add(photoMesh);
-            });
-        });
-
-        // --- PARTIKEL DEBU BINTANG (Lebih Banyak & Bervariasi) ---
-        const particlesGeometry = new THREE.BufferGeometry();
-        const particlesCount = 3500;
-        const posArray = new Float32Array(particlesCount * 3);
-        const sizesArray = new Float32Array(particlesCount);
-
-        for(let i = 0; i < particlesCount; i++) {
-            posArray[i * 3 + 0] = (Math.random() - 0.5) * 80;
-            posArray[i * 3 + 1] = Math.random() * 40 - 5;
-            posArray[i * 3 + 2] = (Math.random() - 0.5) * 80;
-            sizesArray[i] = Math.random() * 0.15 + 0.05; // Variasi ukuran
-        }
-
-        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizesArray, 1));
-
-        // Shader Material custom untuk partikel agar lebih cantik
-        const particlesMaterial = new THREE.PointsMaterial({
-            size: 0.1,
-            color: 0xffaddf, // Warna partikel pink/ungu terang
-            transparent: true,
-            opacity: 0.8,
-            blending: THREE.AdditiveBlending,
-            sizeAttenuation: true
-        });
+    // Loop Animasi (agar hati melayang dan berputar)
+    const clock = new THREE.Clock();
+    function animate() {
+        requestAnimationFrame(animate);
+        const elapsedTime = clock.getElapsedTime();
         
-        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-        scene.add(particlesMesh);
+        // Efek hati melayang naik turun
+        heartMesh.position.y = Math.sin(elapsedTime * 2) * 0.5; 
+        
+        controls.update(); // Update rotasi otomatis
+        renderer.render(scene, camera);
+    }
+    animate();
 
-
-        // --- LOOP ANIMASI ---
-        const clock = new THREE.Clock();
-
-        function animate() {
-            requestAnimationFrame(animate);
-            const elapsedTime = clock.getElapsedTime();
-
-            controls.update();
-
-            // Animasi Partikel (Drift pelan)
-            particlesMesh.rotation.y = elapsedTime * 0.02;
-            particlesMesh.position.y = Math.sin(elapsedTime * 0.5) * 0.5;
-
-            // Animasi Foto Melayang Halus
-            if(photoGroup.children.length > 0) {
-                photoGroup.children.forEach((photo, index) => {
-                    // Gerakan naik turun yang tidak seragam
-                    photo.position.y = 1 + Math.sin(elapsedTime * 0.8 + index * 2) * 0.15;
-                     // Sedikit rotasi bergoyang
-                    photo.rotation.z = Math.sin(elapsedTime * 0.5 + index) * 0.02;
-                });
-            }
-            
-            // Rotasi group foto secara keseluruhan (selain autoRotate kamera)
-            photoGroup.rotation.y += 0.001;
-
-            renderer.render(scene, camera);
-        }
-
-        // Handle Resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            // Update resolusi cermin
-            floorMirror.getRenderTarget().setSize(
-                window.innerWidth * window.devicePixelRatio,
-                window.innerHeight * window.devicePixelRatio
-            );
-        });
-
-        animate();
-    </script>
+    // Agar ukuran canvas menyesuaikan saat layar di-resize (atau dibuka di HP)
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
 </body>
 </html>
