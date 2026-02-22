@@ -5,52 +5,61 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Untuk Kamu ❤️</title>
   <style>
-    /* Styling dasar agar web full screen dan keren */
+    /* Styling Dasar */
     body { 
-      margin: 0; 
-      overflow: hidden; 
-      background-color: #050505; 
-      color: white; 
+      margin: 0; overflow: hidden; background-color: #050505; color: white; 
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
     }
     #canvas-container { 
-      position: absolute; 
-      top: 0; 
-      left: 0; 
-      width: 100vw; 
-      height: 100vh; 
-      z-index: 1; 
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1; 
     }
-    #text-overlay { 
-      position: absolute; 
-      top: 50%; 
-      left: 50%; 
-      transform: translate(-50%, -50%); 
-      text-align: center; 
-      z-index: 2; 
-      pointer-events: none; /* Agar mouse tetap bisa muter objek 3D di belakang teks */
-      width: 90%; 
+    
+    /* Layout UI Kaca Transparan (Glassmorphism) */
+    #ui-layer { 
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+      text-align: center; z-index: 2; width: 90%; max-width: 500px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 30px; border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
     }
-    h1 { 
-      font-size: 3.5rem; 
-      margin: 0; 
-      text-shadow: 0 0 20px #ff2a6d; 
-      opacity: 0; /* Disembunyikan dulu sebelum dianimasikan */
-      transform: scale(0.5);
+
+    h1 { font-size: 2.5rem; margin-top: 0; text-shadow: 0 0 15px #ff2a6d; opacity: 0; transform: scale(0.8); }
+    #quote { font-size: 1.2rem; font-style: italic; min-height: 80px; margin: 20px 0; }
+    
+    /* Tombol Musik */
+    #music-btn {
+      position: absolute; top: 20px; right: 20px; z-index: 3;
+      background: rgba(255, 42, 109, 0.3); border: 1px solid #ff2a6d;
+      color: white; padding: 10px 15px; border-radius: 50px; cursor: pointer;
+      backdrop-filter: blur(5px); transition: 0.3s;
     }
-    p { 
-      font-size: 1.5rem; 
-      font-style: italic; 
-      font-weight: 300; 
-      text-shadow: 0 0 10px rgba(255,255,255,0.5); 
-      margin-top: 20px; 
-      opacity: 0; 
-      transform: translateY(20px);
+    #music-btn:hover { background: rgba(255, 42, 109, 0.6); }
+
+    /* Area Pertanyaan & Tombol Jahil */
+    #question-area { display: none; opacity: 0; margin-top: 20px; }
+    .btn {
+      padding: 10px 30px; margin: 10px; font-size: 1.1rem; font-weight: bold;
+      border: none; border-radius: 50px; cursor: pointer; transition: 0.2s;
     }
+    #btn-yes { background: #ff2a6d; color: white; box-shadow: 0 0 15px #ff2a6d; }
+    #btn-yes:hover { transform: scale(1.1); }
+    #btn-no { background: #555; color: white; position: relative; } /* Posisi relative agar bisa lari */
+
+    /* Area Form Balasan Telegram */
+    #reply-area { display: none; opacity: 0; margin-top: 20px; }
+    textarea {
+      width: 100%; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(0,0,0,0.5); color: white; font-family: inherit; resize: none;
+      box-sizing: border-box; margin-bottom: 15px;
+    }
+    textarea:focus { outline: none; border-color: #ff2a6d; }
+    #btn-send { background: #00e676; color: white; width: 100%; padding: 12px; box-shadow: 0 0 15px #00e676; }
   </style>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  
   <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
   <script type="importmap">
     {
@@ -63,11 +72,26 @@
 </head>
 <body>
 
+  <audio id="bgm" loop>
+    <source src="https://jumpshare.com/s/j7xrSokx9QMhQf58gzuQ" type="audio/mpeg">
+  </audio>
+  <button id="music-btn">🎵 Putar Lagu</button>
+
   <div id="canvas-container"></div>
   
-  <div id="text-overlay">
-    <h1 id="title">Untuk Kamu...</h1>
-    <p id="quote">Memuat cinta...</p>
+  <div id="ui-layer">
+    <h1 id="title">Halo Cantik...</h1>
+    <p id="quote"></p> <div id="question-area">
+      <p style="font-size: 1.3rem; font-weight: bold;">Kamu sayang gak sama aku?</p>
+      <button id="btn-yes" class="btn">Sayang banget! ❤️</button>
+      <button id="btn-no" class="btn">Enggak 👎</button>
+    </div>
+
+    <div id="reply-area">
+      <p id="reply-title" style="font-size: 1.2rem;">Yeay! Aku juga sayang kamu! 💕<br>Kirim pesan rahasia buat aku dong:</p>
+      <textarea id="reply-msg" rows="3" placeholder="Ketik sesuatu di sini..."></textarea>
+      <button id="btn-send" class="btn">Kirim Pesan 💌</button>
+    </div>
   </div>
 
   <script type="module">
@@ -75,27 +99,102 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     // ==========================================
-    // 1. DATA GOMBALAN (Pengganti Backend)
+    // 1. LOGIK UI & INTERAKSI (Musik, Mesin Tik, Telegram)
     // ==========================================
+    
+    // Fitur Musik
+    const musicBtn = document.getElementById('music-btn');
+    const bgm = document.getElementById('bgm');
+    let isPlaying = false;
+    musicBtn.addEventListener('click', () => {
+      if(!isPlaying) { bgm.play(); musicBtn.innerText = "⏸️ Jeda Lagu"; isPlaying = true; }
+      else { bgm.pause(); musicBtn.innerText = "🎵 Putar Lagu"; isPlaying = false; }
+    });
+
+    // Fitur Efek Mesin Tik (Typewriter)
     const quotes = [
-      "Aku nggak butuh Google, karena semua yang aku cari ada di kamu.",
-      "Dunia ini isinya 8 miliar orang, tapi mataku cuma fokus ke kamu.",
-      "Kamu itu kayak WiFi, bikin aku pengen connect terus.",
-      "Cintaku ke kamu itu kayak utang, makin hari makin numpuk.",
-      "Kalau disuruh melupakanmu, aku mau ke kelurahan dulu, minta surat keterangan tidak mampu."
+      "Dunia ini isinya 8 miliar orang, tapi mataku cuma bisa fokus ke kamu.",
+      "Kamu tahu gak bedanya kamu sama rumus matematika? Rumus itu susah dihafal, kalau kamu susah dilupain.",
+      "Cintaku ke kamu itu kayak utang pinjol, makin hari makin numpuk tak terkendali."
     ];
-    // Pilih kata-kata acak
-    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-    document.getElementById('quote').innerText = `"${randomQuote}"`;
+    const textToType = quotes[Math.floor(Math.random() * quotes.length)];
+    const quoteElement = document.getElementById('quote');
+    let index = 0;
+
+    // Animasi Judul Masuk
+    gsap.to("#title", { opacity: 1, scale: 1, duration: 1.5, ease: "back.out(1.7)", onComplete: typeWriter });
+
+    function typeWriter() {
+      if (index < textToType.length) {
+        quoteElement.innerHTML += textToType.charAt(index);
+        index++;
+        setTimeout(typeWriter, 50); // Kecepatan ngetik (50ms)
+      } else {
+        // Tampilkan area pertanyaan setelah ngetik selesai
+        document.getElementById('question-area').style.display = 'block';
+        gsap.to("#question-area", { opacity: 1, y: -10, duration: 1, delay: 0.5 });
+      }
+    }
+
+    // Fitur Tombol Jahil "Enggak"
+    const noBtn = document.getElementById('btn-no');
+    const moveBtn = () => {
+      // Hitung posisi acak berdasarkan ukuran layar
+      const x = Math.random() * (window.innerWidth - noBtn.clientWidth - 50);
+      const y = Math.random() * (window.innerHeight - noBtn.clientHeight - 50);
+      noBtn.style.position = 'fixed';
+      noBtn.style.left = `${Math.max(10, x)}px`;
+      noBtn.style.top = `${Math.max(10, y)}px`;
+    };
+    noBtn.addEventListener('mouseover', moveBtn); // Untuk PC/Laptop
+    noBtn.addEventListener('touchstart', moveBtn); // Untuk HP (Touch)
+
+    // Fitur Tombol "Iya"
+    document.getElementById('btn-yes').addEventListener('click', () => {
+      document.getElementById('question-area').style.display = 'none';
+      noBtn.style.display = 'none'; // Sembunyikan tombol no yang lari-lari
+      document.getElementById('reply-area').style.display = 'block';
+      gsap.to("#reply-area", { opacity: 1, scale: 1, duration: 0.8, ease: "back.out(1.5)" });
+      
+      // Ubah rotasi hati jadi lebih cepat karena senang!
+      heartMesh.material.color.setHex(0xff0055); 
+    });
+
+    // Fitur Kirim ke Telegram
+    document.getElementById('btn-send').addEventListener('click', () => {
+      const msg = document.getElementById('reply-msg').value;
+      if(msg.trim() === "") return alert("Isi dulu dong pesannya hehe...");
+
+      const btnSend = document.getElementById('btn-send');
+      btnSend.innerText = "Mengirim...";
+
+      // GANTI TOKEN DAN CHAT_ID DI BAWAH INI
+      const botToken = "8303109998:AAGOsoAvit6hCAjpSmjBeeCIj2MManPdgWM";
+      const chatId = "5552266500";
+      const text = `Balasan dari Si Doi:\n\n"${msg}"`;
+
+      const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if(data.ok) {
+            btnSend.innerText = "Terkirim! Love you ❤️";
+            btnSend.style.background = "#ff2a6d";
+            document.getElementById('reply-msg').disabled = true;
+          } else {
+            alert("Oops, kayaknya settingan Telegramnya belum bener. Tapi pesanmu udah nyampe di hatiku kok eaa~");
+            btnSend.innerText = "Kirim Pesan 💌";
+          }
+        })
+        .catch(err => {
+          alert("Gagal kirim karena masalah koneksi internet.");
+          btnSend.innerText = "Kirim Pesan 💌";
+        });
+    });
 
     // ==========================================
-    // 2. ANIMASI TEKS 
-    // ==========================================
-    gsap.to("#title", { opacity: 1, scale: 1, duration: 1.5, ease: "back.out(1.7)" });
-    gsap.to("#quote", { opacity: 1, y: 0, duration: 1.5, delay: 1, ease: "power2.out" });
-
-    // ==========================================
-    // 3. SETUP 3D HEART & STARS (Three.js)
+    // 2. SETUP 3D HEART & STARS (Three.js)
     // ==========================================
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
@@ -106,36 +205,25 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
 
-    // Kontrol mouse (bisa diputar-putar)
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableZoom = false;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 2.0;
+    controls.enableZoom = false; controls.autoRotate = true; controls.autoRotateSpeed = 1.5;
 
-    // Pencahayaan
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     scene.add(ambientLight);
     const dirLight = new THREE.DirectionalLight(0xff8eac, 2);
-    dirLight.position.set(10, 10, 5);
-    scene.add(dirLight);
+    dirLight.position.set(10, 10, 5); scene.add(dirLight);
 
-    // Membuat Taburan Bintang
-    const starsGeometry = new THREE.BufferGeometry();
-    const starsMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
-    const starsVertices = [];
-    for(let i = 0; i < 3000; i++) {
-        const x = THREE.MathUtils.randFloatSpread(100);
-        const y = THREE.MathUtils.randFloatSpread(100);
-        const z = THREE.MathUtils.randFloatSpread(100);
-        starsVertices.push(x, y, z);
-    }
-    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
-    const starField = new THREE.Points(starsGeometry, starsMaterial);
-    scene.add(starField);
+    // Bintang
+    const starsGeo = new THREE.BufferGeometry();
+    const starsMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+    const starsVert = [];
+    for(let i=0; i<3000; i++) starsVert.push(THREE.MathUtils.randFloatSpread(100), THREE.MathUtils.randFloatSpread(100), THREE.MathUtils.randFloatSpread(100));
+    starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starsVert, 3));
+    scene.add(new THREE.Points(starsGeo, starsMat));
 
-    // Membuat Bentuk Hati 3D
-    const x = 0, y = 0;
+    // Hati
     const heartShape = new THREE.Shape();
+    const x = 0, y = 0;
     heartShape.moveTo(x + 2.5, y + 2.5);
     heartShape.bezierCurveTo(x + 2.5, y + 2.5, x + 2.0, y, x, y);
     heartShape.bezierCurveTo(x - 3.0, y, x - 3.0, y + 3.5, x - 3.0, y + 3.5);
@@ -144,32 +232,22 @@
     heartShape.bezierCurveTo(x + 8.0, y + 3.5, x + 8.0, y, x + 5.0, y);
     heartShape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
 
-    const extrudeSettings = { depth: 2, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 1, bevelThickness: 1 };
-    const geometry = new THREE.ExtrudeGeometry(heartShape, extrudeSettings);
-    geometry.center(); // Pusatkan objek
-    
-    // Memberi warna dan tekstur metalik pada hati
+    const geometry = new THREE.ExtrudeGeometry(heartShape, { depth: 2, bevelEnabled: true, bevelSegments: 3, steps: 2, bevelSize: 1, bevelThickness: 1 });
+    geometry.center();
     const material = new THREE.MeshStandardMaterial({ color: 0xff2a6d, roughness: 0.2, metalness: 0.8 });
     const heartMesh = new THREE.Mesh(geometry, material);
-    heartMesh.rotation.x = Math.PI; // Balikkan agar posisinya benar
+    heartMesh.rotation.x = Math.PI;
     heartMesh.scale.set(0.4, 0.4, 0.4);
     scene.add(heartMesh);
 
-    // Loop Animasi (agar hati melayang dan berputar)
     const clock = new THREE.Clock();
     function animate() {
         requestAnimationFrame(animate);
-        const elapsedTime = clock.getElapsedTime();
-        
-        // Efek hati melayang naik turun
-        heartMesh.position.y = Math.sin(elapsedTime * 2) * 0.5; 
-        
-        controls.update(); // Update rotasi otomatis
-        renderer.render(scene, camera);
+        heartMesh.position.y = Math.sin(clock.getElapsedTime() * 2) * 0.5; 
+        controls.update(); renderer.render(scene, camera);
     }
     animate();
 
-    // Agar ukuran canvas menyesuaikan saat layar di-resize (atau dibuka di HP)
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
