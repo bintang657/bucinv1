@@ -69,6 +69,7 @@
   </style>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
   <script type="importmap">
     {
@@ -96,7 +97,7 @@
   <div id="interaction-layer" class="ui-layer">
     
     <div id="question-box" class="glass-card">
-      <h2 style="margin-top:0; color: #ff8eac;">Hai, Kesayangan...</h2>
+      <h2 style="margin-top:0; color: #ff8eac;">Hai, Kacung...</h2>
       <p style="font-size: 1.2rem; margin-bottom: 30px;">Setelah semua ini, kamu masih sayang banget kan sama aku?</p>
       <button id="btn-yes" class="btn">Pasti dong! ❤️</button>
       <button id="btn-no" class="btn">Enggak 👎</button>
@@ -153,7 +154,7 @@
     const starField = new THREE.Points(starsGeo, starsMat);
     scene.add(starField);
 
-    // Membuat Hati 3D (Mulai dari ukuran 0)
+    // Membuat Hati 3D
     const heartShape = new THREE.Shape();
     const x = 0, y = 0;
     heartShape.moveTo(x + 2.5, y + 2.5);
@@ -172,7 +173,7 @@
     heartMesh.scale.set(0, 0, 0); 
     scene.add(heartMesh);
 
-    // Post-Processing (Bikin objek menyala/glowing)
+    // Post-Processing
     const renderScene = new RenderPass(scene, camera);
     const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
     bloomPass.threshold = 0; bloomPass.strength = 1.2; bloomPass.radius = 0.5;
@@ -187,9 +188,10 @@
         requestAnimationFrame(animate);
         const time = clock.getElapsedTime();
         
-        starField.rotation.y = time * 0.05;
+        // Bintang berputar secara normal
+        starField.rotation.y += 0.001; // Base speed rotation
 
-        // Animasi Hati Berdetak dan Melayang
+        // Animasi Hati Berdetak
         if (heartVisible) {
             const pulse = 0.4 + Math.sin(time * 4) * 0.02;
             heartMesh.scale.lerp(new THREE.Vector3(pulse, pulse, pulse), 0.1);
@@ -201,7 +203,6 @@
     }
     animate();
 
-    // Responsif saat ukuran layar berubah
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
@@ -229,12 +230,13 @@
       startScreen.style.opacity = '0';
       setTimeout(() => startScreen.style.display = 'none', 1000);
       
-      // Putar musik secara otomatis
+      // Putar musik dengan efek Fade-in
       const bgm = document.getElementById('bgm');
-      bgm.volume = 0.8;
+      bgm.volume = 0; // Mulai dari 0
       bgm.play().catch(e => console.log("Audio play error:", e));
+      gsap.to(bgm, { volume: 0.8, duration: 4 }); // Volume naik perlahan selama 4 detik
 
-      // Jalankan Animasi Teks Cerita
+      // Animasi Teks
       const tl = gsap.timeline();
       storyLines.forEach((line) => {
         tl.call(() => { storyText.innerText = line; })
@@ -242,7 +244,7 @@
           .to(storyText, { opacity: 0, duration: 1.5, ease: "power2.inOut", delay: 1.5 });
       });
 
-      // Munculkan Hati 3D dan Kotak Pertanyaan
+      // Munculkan Hati & Pertanyaan
       tl.call(() => {
         heartVisible = true; 
         gsap.to(camera.position, { z: 10, duration: 3, ease: "power3.inOut" });
@@ -251,7 +253,7 @@
       });
     });
 
-    // Logika Tombol "Enggak" Lari-larian
+    // Tombol "Enggak" Lari-larian
     const noBtn = document.getElementById('btn-no');
     const moveBtn = () => {
       const x = (Math.random() - 0.5) * 300; 
@@ -261,35 +263,48 @@
     noBtn.addEventListener('mouseover', moveBtn);
     noBtn.addEventListener('touchstart', moveBtn);
 
-    // Logika Tombol "Iya"
+    // ==========================================
+    // 3. EFEK SPESIAL SAAT KLIK "IYA"
+    // ==========================================
     document.getElementById('btn-yes').addEventListener('click', () => {
       bloomPass.strength = 2.5;
       pointLight.color.setHex(0xffffff);
       heartMesh.material.emissive.setHex(0xff0040);
+
+      // Efek Bintang Warp Speed (Melar & Putar Kencang)
+      gsap.to(starField.scale, { z: 50, duration: 1, yoyo: true, repeat: 1, ease: "power2.inOut" });
+      gsap.to(starField.rotation, { y: starField.rotation.y + Math.PI * 2, duration: 2, ease: "power2.inOut" });
+      
+      // Ledakan Confetti
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#ff2a6d', '#ff7b9c', '#ffffff'],
+        zIndex: 9999
+      });
       
       gsap.to(questionBox, { opacity: 0, y: -20, duration: 0.5, onComplete: () => {
         questionBox.style.display = 'none';
         replyBox.style.display = 'block';
-        gsap.to(replyBox, { opacity: 1, y: 0, duration: 0.8, ease: "back.out(1.5)" });
+        gsap.to(replyBox, { opacity: 1, y: 0, duration: 0.8, ease: "back.out(1.5)", delay: 0.5 });
       }});
     });
 
     // ==========================================
-    // 3. INTEGRASI BOT TELEGRAM
+    // 4. INTEGRASI BOT TELEGRAM
     // ==========================================
     document.getElementById('btn-send').addEventListener('click', () => {
       const msg = document.getElementById('reply-msg').value;
-      if(msg.trim() === "") return alert("Isi pesannya dulu dong sayang...");
+      if(msg.trim() === "") return alert("Isi pesannya dulu dong kacung...");
 
       const btnSend = document.getElementById('btn-send');
       btnSend.innerText = "Menerbangkan pesan...";
 
-      // 👇 GANTI TOKEN DAN CHAT ID DI BAWAH INI 👇
       const botToken = "8303109998:AAGOsoAvit6hCAjpSmjBeeCIj2MManPdgWM"; 
       const chatId = "5552266500";
-      // 👆 GANTI TOKEN DAN CHAT ID DI ATAS INI 👆
-
-      const text = `💌 PESAN CINTA DARI DOI:\n\n"${msg}"`;
+      const text = `💌 PESAN CINTA DARI KACUNG:\n\n"${msg}"`;
+      
       const url = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`;
 
       fetch(url)
